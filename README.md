@@ -8,12 +8,12 @@ Overlay de stream **et** compagnon de jeu pour **Farming Simulator 25**.
 
 ## ⬇️ Télécharger
 
-La dernière version est dans **[Releases](../../releases/latest)** : télécharge le fichier « FS25 Stream & Companion - Installation vX.X.X.exe » et lance-le.
+La dernière version est dans **[Releases](../../releases/latest)** : télécharge le fichier d'installation (.exe) et lance-le. C'est le seul fichier nécessaire.
 
 - Windows affiche « Windows a protégé votre ordinateur » : clique sur « Informations complémentaires » puis « Exécuter quand même ».
 - Pas besoin de désinstaller l'ancienne version : tes réglages sont gardés.
 - L'application installe et met à jour le mod toute seule.
-- **Multijoueur** : le serveur (dédié ou hôte) doit avoir la même version du mod. Serveur dédié : mets le fichier `FS25_StreamDashboard.zip` (aussi dans Releases) dans le dossier mods du serveur.
+- **Multijoueur** : le serveur (dédié ou hôte) doit avoir la même version du mod. Après avoir lancé le jeu une fois avec l'app, prends `FS25_StreamDashboard.zip` dans ton dossier mods (Documents\My Games\FarmingSimulator2025\mods) et copie-le dans le dossier mods du serveur.
 
 ## 💬 Aide et communauté
 
