@@ -1,10 +1,16 @@
 # FS25 Stream & Companion — by leluxo
 
+![FS25 Stream & Companion](images/presentation-1.jpg)
+
 Overlay de stream **et** compagnon de jeu pour **Farming Simulator 25**.
 
 - 🎥 **Stream (OBS)** : ton véhicule, tes outils, le champ, la météo, l'argent… dans une page à ajouter dans OBS.
 - 📱 **Compagnon** : sur téléphone, tablette ou 2e écran : carte des champs, fiche des champs, liste « À faire », alertes, qui fait quoi, tes engins, tes silos, téléportation en double-clic.
 - 🎮 **Dans le jeu** : blocs d'infos (À faire, Qui fait quoi, Prévisions météo, Champ actuel, Dernières alertes), touche **F9** pour les ouvrir / fermer (modifiable dans Options > Commandes du jeu).
+
+![Stream (OBS)](images/presentation-2.jpg)
+
+![Compagnon et infos dans le jeu](images/presentation-3.jpg)
 
 ## ⬇️ Télécharger
 
