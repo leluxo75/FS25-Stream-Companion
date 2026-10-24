@@ -23,5 +23,5 @@ La dernière version est dans **[Releases](../../releases/latest)** : téléchar
 
 ## 💬 Aide et communauté
 
-- Discord « La Ferme à Luxo » : https://discord.gg/5DfJaTwfAZ
+- Discord « La Ferme à Luxo » : https://discord.gg/xhsWj2e5z3
 - Soutenir le projet : https://ko-fi.com/leluxo
