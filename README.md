@@ -21,6 +21,7 @@ La dernière version est dans **[Releases](../../releases/latest)** : téléchar
 - Pas besoin de désinstaller l'ancienne version : tes réglages sont gardés.
 - L'application installe et met à jour le mod toute seule.
 - **Multijoueur** : le serveur (dédié ou hôte) doit avoir la même version du mod. Après avoir lancé le jeu une fois avec l'app, prends `FS25_StreamDashboard.zip` dans ton dossier mods (Documents\My Games\FarmingSimulator2025\mods) et copie-le dans le dossier mods du serveur.
+- **Crossplay (PlayStation / Xbox)** : l'application et le mod sont **pour PC uniquement**. Les joueurs console ne peuvent pas installer le mod, donc ils ne pourront pas rejoindre un serveur où il est installé. Pour jouer avec des joueurs console, il faut retirer le mod du serveur.
 
 ## 💬 Aide et communauté
 
