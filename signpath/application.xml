@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Configuration SignPath "application" : a coller dans SignPath (Project > Artifact configurations, slug = application).
+     Signe uniquement NOTRE exe (regle SignPath Foundation : "own binaries only").
+     Les DLL de Python / Pillow restent avec la signature de leurs auteurs. -->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <zip-file>
+    <directory path="FS25 Stream Dashboard">
+      <pe-file path="FS25 Stream Dashboard.exe" product-name="FS25 Stream &amp; Companion">
+        <authenticode-sign />
+      </pe-file>
+    </directory>
+  </zip-file>
+</artifact-configuration>

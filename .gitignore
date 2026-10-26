@@ -1,0 +1,10 @@
+# fichiers fabriques / outils locaux : jamais sur GitHub
+.venv/
+build/
+dist/
+Portable/
+__pycache__/
+*.spec
+version_info.txt
+*.exe
+config.json

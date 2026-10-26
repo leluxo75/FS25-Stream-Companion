@@ -1,0 +1,1991 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0c1210">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Compagnon · FS25 Stream &amp; Companion</title>
+<link rel="icon" href="/compagnon/icon.svg">
+<link rel="apple-touch-icon" href="/compagnon/icon.png">
+<link rel="manifest" href="/compagnon/manifest.json">
+<style>
+:root{color-scheme:dark;--bg:#0c1210;--card:#16211b;--card2:#1c2a22;--line:#2c3d33;--green:#8fe45f;--onGreen:#0d1410;--text:#f3f7f2;--muted:#a3b3a8;
+  --amber:#e7ae51;--red:#ef6a5a;--blue:#3b7bdc;--chip:#0d1410e8;--track:#ffffff1a;--mapbg:#1f2c22;--sel:#8fe45f1c}
+:root.light{color-scheme:light;--bg:#eef2ea;--card:#fff;--card2:#f4f7f1;--line:#d6e0d1;--green:#3d8f1c;--onGreen:#fff;--text:#18241c;--muted:#5f6f64;
+  --amber:#b7700c;--red:#c8392b;--chip:#ffffffee;--track:#00000012;--mapbg:#cfd8c8;--sel:#3d8f1c18}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg);overflow:hidden;
+  display:flex;flex-direction:column;height:100dvh}
+:root:not(.light) body{background:radial-gradient(ellipse at 20% 0%,#1d3026 0%,var(--bg) 70%)}
+button{font:inherit;color:inherit}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;min-width:0;min-height:0}
+.label{font-size:11px;letter-spacing:.13em;color:var(--muted);font-weight:700;text-transform:uppercase}
+.muted{color:var(--muted)}
+.ok{color:var(--green)}.warn{color:var(--amber)}.bad{color:var(--red)}
+.hide{display:none!important}
+
+/* ---------- bandeau ---------- */
+#top{display:flex;align-items:center;gap:8px;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));border-bottom:1px solid var(--line);background:var(--card);flex-shrink:0;min-width:0}
+#top .lg{width:38px;height:30px;flex-shrink:0;color:var(--text)}
+.logo{font-weight:900;color:#fff;background:#4f9d2a;border-radius:8px;padding:1px 9px;transform:skewX(-8deg);font-size:15px;flex-shrink:0}
+.ttl{font-weight:800;font-size:16px;white-space:nowrap}.ttl b{color:var(--green)}
+body.phone .ttl{font-size:15px}
+body.phone .ttlFs{display:none}
+body.phone #top{gap:6px;padding-left:10px;padding-right:10px}
+body.phone .pill{padding:5px 9px}
+.sp{flex:1;min-width:0}
+.pill{display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:var(--card2);border:1px solid var(--line);font-size:13px;font-weight:600;white-space:nowrap;flex-shrink:0}
+.pill.btn{cursor:pointer}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+.dot.idle{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.dot.off{background:var(--red);box-shadow:none}
+#pFc{gap:9px}
+body.tb-map #pMap,body.tb-wn .wn,body.tb-ttl .ttl,body.tb-fc3 #pFc>span:nth-child(n+6){display:none}
+#pFc .sep{color:var(--muted)}
+#pWeather.fcbtn{cursor:pointer}
+#fcMenu{position:fixed;z-index:55;display:none;flex-direction:column;gap:6px;padding:10px 12px;min-width:230px;box-shadow:0 10px 30px #0008}
+#fcMenu.open{display:flex}
+#fcMenu .r{display:flex;align-items:center;gap:10px;font-size:15px}
+#fcMenu .r .i{font-size:20px;width:26px}
+#modeMenu{max-height:calc(100dvh - 64px);overflow:auto;position:absolute;right:10px;top:52px;z-index:50;display:none;flex-direction:column;gap:2px;padding:6px;border-radius:12px;background:var(--card);border:1px solid var(--line);box-shadow:0 10px 30px #0006}
+#modeMenu.open{display:flex}
+#modeMenu a{padding:9px 14px;border-radius:8px;font-weight:600;cursor:pointer;white-space:nowrap}
+#modeMenu a.on{background:var(--green);color:var(--onGreen)}
+#modeMenu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
+
+/* ---------- zone principale ---------- */
+#main{flex:1;min-height:0;display:grid;gap:12px;padding:12px}
+body.pc #main{grid-template-columns:330px minmax(0,1fr) 390px;grid-template-rows:minmax(0,1fr) minmax(220px,34%);
+  grid-template-areas:"pl map side" "pl tbl side"}
+#side{grid-area:side;display:flex;flex-direction:column;gap:12px;min-height:0}
+body:not(.pc) #side{display:contents}
+body.pc #ficheCard{flex-shrink:0;max-height:62%;overflow:auto}
+body.pc:not(.sheetopen) #ficheCard{display:none}
+body.pc #todoCard{flex:1;min-height:0}
+body.tablet #main{grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"map fiche" "map tbl"}
+body.tablet.portrait #main{grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1.25fr) minmax(0,1fr);grid-template-areas:"map map" "fiche tbl"}
+body.phone #main{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"v" "f";padding:8px;gap:8px}
+body.phone #ficheCard{grid-area:f}
+#mapCard{grid-area:map}#tblCard{grid-area:tbl}#plCard{grid-area:pl}
+body.tablet #ficheCard{grid-area:fiche}body.phone #todoCard{grid-area:v}
+body.phone #mapCard,body.phone #tblCard,body.phone #plCard{grid-area:v}
+body.phone:not(.t-carte) #mapCard,body.phone:not(.t-champs) #tblCard,body.phone:not(.t-joueurs) #plCard,body.phone:not(.t-faire) #todoCard{display:none}
+body.tablet #todoCard,body.tablet #plCard{display:none}
+.scroll{overflow:auto;-webkit-overflow-scrolling:touch}
+
+/* ---------- carte ---------- */
+#mapCard{position:relative;overflow:hidden;background:var(--mapbg);padding:0}
+#mapView{position:absolute;inset:0;overflow:hidden;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#mapView img,#mapView svg{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none}
+html,body{touch-action:manipulation}
+#mapCard{touch-action:none}
+#mapView.drag{cursor:grabbing}
+#mapImg{position:absolute;max-width:none;pointer-events:none;image-rendering:auto}
+#mapImg.err{display:none}
+#fieldsSvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#fieldsSvg path{fill-opacity:.78;stroke:#0009;stroke-linejoin:round}
+#fieldsSvg path.none{fill:transparent;stroke:#ffffffa0}
+:root.light #fieldsSvg path.none{stroke:#ffffffd0}
+#fieldsSvg path.sel{stroke:#fff;fill-opacity:.9}
+#labels,#pins{position:absolute;inset:0;pointer-events:none}
+.flab{position:absolute;transform:translate(-50%,-50%);font-weight:600;color:#fff;font-size:12px;
+  text-shadow:0 0 3px #000,0 0 3px #000,0 1px 4px #000;white-space:nowrap}
+.flab.big{font-size:14px}
+.ppin{position:absolute;width:0;height:0}
+.ppin i{position:absolute;left:-12px;top:-12px;width:24px;height:24px;border-radius:7px;background:var(--chip);border:2px solid #ffffffb0;display:flex;align-items:center;justify-content:center;
+  font-style:normal;font-size:13px;box-shadow:0 2px 6px #0009}
+.ppin.home i{border-color:var(--green);width:28px;height:28px;left:-14px;top:-14px;font-size:15px}
+.ppin.small i{width:18px;height:18px;left:-9px;top:-9px;font-size:10px;border-width:1.5px;opacity:.85}
+.ppin.sel i{border-color:var(--green);box-shadow:0 0 0 3px var(--green)}
+.vhSec{display:flex;align-items:center;gap:6px;padding:9px 6px 5px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none;flex-shrink:0;border-radius:8px}
+.vhSec:hover{color:var(--text)}
+.vhSec .ar{display:inline-block;transition:transform .15s;font-size:10px}.vhSec.open .ar{transform:rotate(90deg)}
+.vhSec .c{margin-left:auto;background:var(--card2);border-radius:8px;padding:1px 7px;font-size:10.5px;letter-spacing:0}
+.plc .t .ic{width:20px;text-align:center;flex-shrink:0}
+.pin{position:absolute;width:0;height:0}
+.pin .arr{position:absolute;left:-14px;top:-14px;width:28px;height:28px;transform:rotate(var(--r,0deg));filter:drop-shadow(0 2px 3px #000a)}
+.pin .dotp{position:absolute;left:-8px;top:-8px;width:16px;height:16px;border-radius:50%;border:3px solid #0b120e;background:var(--c)}
+.pin .nm{position:absolute;left:0;bottom:16px;transform:translateX(-50%);padding:1px 8px;border-radius:8px;font-size:12px;font-weight:800;color:#0d1410;
+  background:var(--c);white-space:nowrap;box-shadow:0 2px 6px #0008}
+.layers{position:absolute;top:10px;left:10px;display:flex;gap:3px;padding:4px;border-radius:12px;background:var(--chip);border:1px solid var(--line);box-shadow:0 4px 14px #0004;z-index:3;max-width:calc(100% - 20px)}
+.layers a{padding:7px 11px;border-radius:9px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap}
+.layers a.on{background:var(--green);color:var(--onGreen)}
+body.phone .layers{right:10px;justify-content:space-between}
+body.phone .layers a{padding:7px 6px;font-size:12.5px;flex:1;text-align:center}
+.zoom{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:6px;z-index:3}
+body.phone .zoom{bottom:auto;top:62px}
+.zoom button{width:44px;height:44px;border-radius:12px;background:var(--chip);border:1px solid var(--line);font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.zoom button.on{background:var(--green);color:var(--onGreen);border-color:var(--green)}
+.legend{position:absolute;left:10px;bottom:10px;display:flex;flex-wrap:wrap;gap:5px 12px;max-width:calc(100% - 80px);padding:7px 10px;border-radius:12px;
+  background:var(--chip);border:1px solid var(--line);font-size:12px;font-weight:600;z-index:3}
+.legend:empty{display:none}
+.lgi{cursor:pointer;user-select:none;padding:2px 4px;margin:-2px -4px;border-radius:6px;white-space:nowrap}
+.lgi:hover{background:var(--sel)}
+.lgi.off{opacity:.45;text-decoration:line-through}
+.lgi.off i{background:transparent!important;border:1px dashed var(--muted)}
+.lgall{color:var(--green);font-weight:800}
+.legend{max-height:40%;overflow:auto}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px;border:1px solid #0004}
+body.phone .legend{bottom:auto;top:62px;max-width:calc(100% - 76px)}
+body.phone.sheetopen .legend{display:none}
+/* ---------- mes engins (a gauche de la carte) + teleportation ---------- */
+#vehPanel{position:absolute;left:0;top:0;bottom:0;width:250px;background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;z-index:4}
+body.tablet #vehPanel{width:215px}
+body.phone #vehPanel,#vehPanel.none{display:none}
+body:not(.phone) #mapCard.withVeh #mapView{left:250px}
+body.tablet #mapCard.withVeh #mapView{left:215px}
+body.pc #mapCard.withVeh .layers,body.pc #mapCard.withVeh .legend{left:260px}
+body.tablet #mapCard.withVeh .layers,body.tablet #mapCard.withVeh .legend{left:225px}
+#mapCard.withVeh .layers,#mapCard.withVeh .legend{max-width:calc(100% - 330px)}
+.vhHead{display:flex;justify-content:space-between;align-items:center;padding:12px 12px 6px;font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--muted)}
+.vhList{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 8px 8px;display:flex;flex-direction:column;gap:6px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.vh{background:var(--card2);border:1px solid transparent;border-radius:10px;padding:7px 10px;cursor:pointer;user-select:none;flex-shrink:0}
+.vh:hover{border-color:var(--line)}
+.vh.sel{border-color:var(--green);background:var(--sel)}
+.vh.occ{opacity:.6}
+.vh .t{display:flex;align-items:center;gap:7px;font-weight:600;font-size:12.5px;min-width:0}
+.vh .t .n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vh .t .who{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
+.plate{display:inline-block;flex-shrink:0;font:700 10.5px/1.3 "Segoe UI",Arial;letter-spacing:.06em;color:#14181a;background:#f1f3ee;border:1px solid #9aa39c;border-radius:3px;padding:0 4px;white-space:nowrap;max-width:9em;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
+.fname .plate{font-size:12px;margin-left:8px}
+.vh .t .who.me{color:var(--green)}
+.vh .d{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+.vh.occ .d{background:var(--amber)}
+.vh .s{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);margin-top:3px;font-weight:500}
+.vh .fl{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);margin-top:2px;font-weight:500}
+.vh .fl b{color:var(--text);font-weight:600;white-space:nowrap}
+.vh .s .br{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vh .mb{width:40px;height:4px;border-radius:2px;background:var(--track);position:relative;flex-shrink:0}
+.vh .mb i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--green)}
+.goBtn{display:block;width:100%;margin-top:7px;background:var(--green);color:var(--onGreen);border:0;border-radius:8px;padding:6px 0;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit}
+.goBtn:disabled{opacity:.5;cursor:default}
+.vhHint{font-size:11px;color:var(--muted);text-align:center;padding:6px 10px 10px}
+.vhEmpty{padding:14px;font-size:13px;color:var(--muted);text-align:center}
+#vehCard{display:none;flex-direction:column;overflow:hidden}
+body.phone.t-engins #vehCard{display:flex;grid-area:v}
+body.phone #vehCard .vhList{padding:0 10px 10px}
+#goToast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:60;background:var(--chip);border:1px solid var(--green);border-radius:22px;padding:9px 18px;
+  font-weight:800;font-size:14px;box-shadow:0 6px 20px #0009;display:none;max-width:calc(100% - 24px);text-align:center}
+#goToast.err{border-color:var(--red)}
+body.phone #goToast{bottom:96px}
+.vpin{position:absolute;width:0;height:0}
+.vpin i{position:absolute;left:-9px;top:-9px;width:18px;height:18px;border-radius:5px;background:#fff;border:3px solid var(--green);box-shadow:0 0 0 3px #0008}
+#mapMsg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:12px 18px;border-radius:14px;background:var(--chip);border:1px solid var(--line);font-weight:700;text-align:center;z-index:2;display:none}
+
+/* ---------- fiche du champ ---------- */
+#ficheCard{display:flex;flex-direction:column}
+.fiche{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.fh{display:flex;align-items:center;gap:10px}
+.fnum{font-size:26px;font-weight:900;background:var(--green);color:var(--onGreen);border-radius:10px;padding:0 10px;line-height:1.3;flex-shrink:0}
+.fname{font-weight:800;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fsub{font-size:13px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kv{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0}
+.kv .v{font-size:16px;font-weight:800;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{height:7px;border-radius:5px;background:var(--track);overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;border-radius:5px;background:var(--green)}
+.tag{display:inline-block;padding:2px 8px;border-radius:7px;font-size:12px;font-weight:800;white-space:nowrap;flex-shrink:0}
+.empty{padding:26px 18px;text-align:center;color:var(--muted);line-height:1.6}
+.empty b{color:var(--text)}
+.close{margin-left:auto;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--card2);cursor:pointer;font-size:16px;flex-shrink:0}
+body.tablet .close{display:none}
+.lnk{padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card2);font-weight:700;font-size:13px;cursor:pointer;text-align:center}
+.onf{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.onf div{display:flex;align-items:center;gap:7px;font-weight:700;font-size:14px}
+.cdot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;flex-shrink:0;border:1px solid #0003}
+.pdot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+/* telephone : la fiche monte du bas de la carte */
+body.phone #ficheCard{max-height:52dvh;overflow:auto;border-radius:20px 20px 16px 16px}
+body.phone .fiche{padding:10px 12px 12px;gap:8px}
+body.phone .fiche .kv{padding:7px 10px}
+body.phone .fiche .kv .v{font-size:15px}
+body.phone .fnum{font-size:22px}
+body.phone .fname{font-size:17px}
+body.phone .ownerKv{display:none}
+body.tablet .ownerKv,body.tablet #ficheCenter,body.tablet .tblHead .label{display:none}
+body.tablet .fiche{gap:8px;padding:12px 14px}
+body.tablet td .bar{width:48px}
+body.tablet th,body.tablet td{padding:7px 6px}
+@media (max-width:1000px){.ttlFs{display:none}}
+@media (max-width:380px){body.phone #top{gap:4px;padding-left:8px;padding-right:8px}body.phone .pill{padding:4px 7px;font-size:12.5px}body.phone .ttl{font-size:14px}}
+@media (max-width:900px){#pMap{display:none}}
+body.phone:not(.sheetopen) #ficheCard,body.phone:not(.t-carte) #ficheCard{display:none}
+.grab{width:42px;height:5px;border-radius:3px;background:var(--line);margin:8px auto 0;flex-shrink:0}
+body:not(.phone) .grab{display:none}
+
+/* ---------- tableau des champs ---------- */
+#tblCard{display:flex;flex-direction:column;padding:8px 6px 0}
+.tblHead{display:flex;align-items:center;gap:6px;padding:2px 8px 6px;flex-wrap:wrap}
+.seg{display:flex;gap:3px;padding:3px;border-radius:11px;background:var(--card2);border:1px solid var(--line)}
+.seg a{padding:6px 10px;border-radius:8px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap;text-align:center}
+.seg a.on{background:var(--green);color:var(--onGreen)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{position:sticky;top:0;background:var(--card);z-index:1;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+th.s{color:var(--green)}
+td{padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--sel)}
+tr.sel td{background:var(--sel)}
+td .bar{margin-top:0;width:72px;display:inline-block;vertical-align:middle;margin-right:6px}
+td.own{max-width:160px;overflow:hidden;text-overflow:ellipsis}
+/* telephone : liste en cartes */
+.frows{display:flex;flex-direction:column;gap:8px;padding:2px 2px 12px}
+.frow{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:14px;background:var(--card2);border:1px solid var(--line);cursor:pointer}
+.frow.sel{border-color:var(--green)}
+.frow .n{font-weight:900;font-size:17px;min-width:40px;text-align:center;border-radius:9px;background:var(--card);padding:4px 4px}
+.frow .t{display:flex;justify-content:space-between;gap:8px;font-weight:800;font-size:14px}
+body.phone #tblCard{padding:8px 4px 0;background:transparent;border:0}
+body.phone .tblHead{padding:0 2px 8px}
+body.phone .tblHead .seg{flex:1}
+body.phone .tblHead .seg a{flex:1}
+body.phone .tblHead .label{display:none}
+
+/* ---------- joueurs ---------- */
+#plCard{padding:14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+#plCard>*{flex-shrink:0}
+.pl{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;background:var(--card2);border:1px solid var(--line);cursor:pointer}
+.av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#0d1410;flex-shrink:0}
+.pl .n{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl .s{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.pl .r{text-align:right;flex-shrink:0}
+.sum{display:grid;grid-template-columns:1fr;gap:8px}
+body.phone #plCard{background:transparent;border:0;padding:8px 2px}
+
+/* ---------- a faire, alertes ---------- */
+#todoCard{display:flex;flex-direction:column;padding:12px 12px 0}
+body.phone #todoCard{background:transparent;border:0;padding:8px 2px 0}
+.todoHead{display:flex;align-items:center;gap:8px;padding:0 2px 8px}
+.cnt0{min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--red);color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+.ibtn{padding:4px 9px;border-radius:999px;border:1px solid var(--line);background:var(--card2);font-size:13px;cursor:pointer;opacity:.45}
+.ibtn.on{opacity:1}
+.sect{display:flex;align-items:center;gap:8px;margin:12px 2px 6px;font-weight:800;font-size:14px}
+.sect .ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.sect .c{margin-left:auto;font-size:12px;color:var(--muted);font-weight:700}
+.todo{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:14px;background:var(--card2);border:1px solid var(--line);margin-bottom:6px;cursor:pointer}
+.todo .n{font-weight:900;font-size:16px;min-width:38px;text-align:center;border-radius:9px;background:var(--card);padding:4px}
+.todo .t{font-weight:800;font-size:14px}.todo .s{font-size:12px;color:var(--muted);margin-top:2px}
+.todo .go{margin-left:auto;padding:6px 10px;border-radius:9px;border:1px solid var(--line);font-size:12px;font-weight:700;color:var(--muted);background:var(--card);flex-shrink:0}
+.alert{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:14px;margin-bottom:6px;border:1px solid;cursor:pointer}
+.alert .t{font-weight:800;font-size:14px}.alert .s{font-size:12px;opacity:.85;margin-top:1px}
+.alert .x{margin-left:auto;font-size:15px;opacity:.7;padding:4px 6px;border:0;background:none;cursor:pointer;flex-shrink:0}
+.a-ready{background:#e8962a22;border-color:#e8962a77}.a-wither{background:#ef6a5a22;border-color:#ef6a5a77}.a-full{background:#3b7bdc22;border-color:#3b7bdc77}
+.newdot{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0}
+.alert.read .newdot{visibility:hidden}
+.badge{position:absolute;top:1px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.hint{font-size:12px;color:var(--muted);padding:6px 4px;line-height:1.5}
+/* qui fait quoi */
+.pl2{padding:10px 12px;border-radius:14px;background:var(--card2);border:1px solid var(--line);display:flex;flex-direction:column;gap:6px;cursor:pointer}
+.pl2 .hd{display:flex;align-items:center;gap:10px}
+.pl2 .row{display:flex;gap:8px;font-size:13px;align-items:center;min-width:0}
+.pl2 .row .k{color:var(--muted);width:72px;flex-shrink:0}
+.pl2 .row b{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.work{display:inline-block;padding:2px 8px;border-radius:7px;font-size:12px;font-weight:800;background:var(--sel);color:var(--green);white-space:nowrap;flex-shrink:0}
+.work.idle{color:var(--muted)}
+/* 1.4.4 : joueur AFK (5 min sans bouger) */
+/* 1.4.4 : toucher « Alertes du jeu » fait clignoter ses reglages (durée, ma ferme / tout) */
+#gsDur.flash{animation:gsflash 1.2s ease}
+@keyframes gsflash{0%,60%{box-shadow:0 0 0 2px var(--green)}100%{box-shadow:0 0 0 0 transparent}}
+.work.afk{color:var(--muted);background:var(--line)}
+.pl2.afk .hd>.av,.pl2.afk .row{opacity:.5}.pl2.afk .n{color:var(--muted)}
+.afkt{margin-left:auto;font-size:11px;font-weight:800;color:var(--muted);white-space:nowrap}
+.pin.afk .nm{background:#4a514c;color:#fff}.pin.afk .nm .zz{font-weight:900;font-style:italic;margin-right:5px;font-size:.9em}.pin.afk .nm .zz sup{font-size:.7em}
+.fillbar{height:6px;border-radius:4px;background:var(--track);overflow:hidden;width:90px;flex-shrink:0}
+.fillbar i{display:block;height:100%;background:var(--amber)}
+/* note perso */
+.note{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.note textarea{width:100%;min-height:50px;border:0;background:transparent;color:var(--text);font:14px "Segoe UI",system-ui,Arial;resize:vertical;outline:none;padding:4px 0 0;display:block}
+.note .st{font-size:11px;color:var(--muted);text-align:right}
+#ficheNote{padding:0 16px 14px}
+body.phone #ficheNote{padding:0 12px 12px}
+.nt{font-size:12px;margin-left:4px}
+/* menu : interrupteurs */
+#modeMenu .tg{display:flex;align-items:center;gap:10px}
+#modeMenu .sw{margin-left:auto;width:38px;height:22px;border-radius:11px;background:var(--line);position:relative;flex-shrink:0}
+#modeMenu .sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+#modeMenu .sw.on{background:var(--green)}#modeMenu .sw.on::after{left:19px}
+#modeMenu .mnote{font-size:11px;color:var(--muted);padding:2px 14px 6px;max-width:240px;line-height:1.4}
+
+/* ---------- onglets telephone ---------- */
+#tabs{display:none;border-top:1px solid var(--line);background:var(--card);padding:6px 6px max(10px,env(safe-area-inset-bottom));flex-shrink:0}
+body.phone #tabs{display:flex}
+#tabs a{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:700;color:var(--muted);padding:6px 0;border-radius:12px;cursor:pointer}
+#tabs a.on{color:var(--green);background:var(--sel)}
+#tabs svg{width:24px;height:24px}
+body.phone .hidePhone{display:none!important}
+
+/* ---------- code d'acces ---------- */
+#gameSheet{position:fixed;inset:0;z-index:90;background:#000a;display:none;align-items:center;justify-content:center;padding:16px}
+#gameSheet.open{display:flex}
+#gameSheet .gs{width:min(980px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.gsHead{display:flex;align-items:center;gap:10px;font-size:18px}.gsHead .sp,.gsRow .sp{flex:1}
+.gsX{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:10px;width:36px;height:36px;font-size:16px;cursor:pointer}
+.gsTg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+body.phone .gsTg{grid-template-columns:1fr}
+.gsTg .tg{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:12px;background:var(--card2);border:1px solid var(--line);font-weight:600;cursor:pointer}
+.gsTg .sw{margin-left:auto;width:38px;height:22px;border-radius:11px;background:var(--line);position:relative;flex-shrink:0;cursor:pointer}
+.gsTg .sw::before{content:"";position:absolute;inset:-10px -12px}
+.gsTg .tg.sel{border-color:var(--green);background:var(--sel)}
+.gsTg .sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+.gsTg .sw.on{background:var(--green)}.gsTg .sw.on::after{left:19px}
+.gsHint{font-size:12px;color:var(--muted);margin-top:-6px}
+#gsScreen{position:relative;width:100%;aspect-ratio:16/9;margin:0 auto;flex-shrink:0;border-radius:12px;overflow:hidden;border:1px solid var(--line);touch-action:none;user-select:none;
+  background:linear-gradient(180deg,#8fb3d6 0%,#c9d9e4 46%,#7c9a52 47%,#4f6d35 100%)}
+.gsP{position:absolute;border:1px solid #3b5a44;border-radius:8px;padding:.5% .7%;color:#e9f0ea;cursor:grab;overflow:hidden;
+  line-height:1.35;display:flex;flex-direction:column;box-shadow:0 4px 14px #0005}
+.gsP b{font-size:.82em;letter-spacing:.06em;color:#9fd77a;white-space:nowrap}.gsP i{font-style:normal;white-space:nowrap;opacity:.92;overflow:hidden;text-overflow:ellipsis}
+.gsP .bar{height:3px;border-radius:2px;background:#2b372f;margin:1px 0 2px}.gsP .bar span{display:block;height:100%;border-radius:2px;background:#8fe45f}
+.gsP.drag{cursor:grabbing}.gsP.sel{outline:2px solid var(--green);outline-offset:1px}.gsP.hid{opacity:.28}
+.gsP .tagK{position:absolute;right:3px;top:2px;font-size:.7em;color:#9fd77a;opacity:.8}
+.gsP>*{flex-shrink:0}
+.gsP .rsz{position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize;touch-action:none;
+  background:linear-gradient(135deg,transparent 55%,#9fd77a 55%,#9fd77a 65%,transparent 65%,transparent 75%,#9fd77a 75%,#9fd77a 85%,transparent 85%)}
+.gsP:not(.sel) .rsz{opacity:.35}
+.gsFc{display:flex;gap:3%;margin-top:2px}.gsFc span{flex:1;text-align:center;background:#1c2a22;border-radius:5px;padding:2px 0;font-size:.85em;line-height:1.4}
+.gsRow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.gsBtn{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer}
+#gsEdit{display:flex;flex-direction:column;gap:10px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+#gsEdit .ttl2{font-weight:800}
+#gsEdit .ln{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#gsEdit .ln span.k{width:150px;color:var(--muted);font-size:13px;font-weight:600}
+#gsEdit input[type=range]{flex:1;min-width:140px;accent-color:var(--green)}
+#gsEdit .v{min-width:56px;text-align:right;font-weight:700}
+.seg2{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg2 a{padding:6px 12px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}.seg2 a.on{background:var(--green);color:var(--onGreen)}
+#phoneSheet{position:fixed;inset:0;z-index:95;background:#000a;display:none;align-items:center;justify-content:center;padding:16px}
+#phoneSheet.open{display:flex}
+#phoneSheet .ps{width:min(720px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.psBody{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.psQr{background:#fff;border-radius:14px;padding:8px;width:230px;height:230px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#333;font-size:13px;text-align:center}
+.psQr svg{width:100%;height:100%}
+.psOpts{flex:1;min-width:260px;display:flex;flex-direction:column;gap:10px}
+.psRow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--card2);border:1px solid var(--line);cursor:pointer}
+.psRow .sw{margin-left:auto;width:38px;height:22px;border-radius:11px;background:var(--line);position:relative;flex-shrink:0}
+.psRow .sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+.psRow .sw.on{background:var(--green)}.psRow .sw.on::after{left:19px}
+.psTxt{font-size:13px;line-height:1.45}.psTxt code{color:var(--green);font-size:14px}
+.psRow2{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#codeBox{position:fixed;inset:0;z-index:100;background:#000b;display:none;align-items:center;justify-content:center;padding:16px}
+#codeBox.show{display:flex}
+#codeBox .card{padding:22px;display:flex;flex-direction:column;gap:12px;align-items:center;width:min(340px,100%)}
+#codeIn{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:var(--text);font:800 26px "Segoe UI",Arial;letter-spacing:.3em;text-align:center}
+#codeBox button{width:100%;padding:12px;border-radius:12px;border:0;background:var(--green);color:var(--onGreen);font-weight:800;font-size:16px;cursor:pointer}
+
+/* ---------- 1.4.3 ---------- */
+/* fiche : defile si elle est trop haute (la note ne deborde plus) */
+#ficheCard{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+#ficheCard>*{flex-shrink:0}
+body.tablet:not(.portrait) #ficheCard{max-height:64dvh}
+/* fiche batiment / engin */
+.fic{font-size:24px;background:var(--card2);border:1px solid var(--line);border-radius:10px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kl{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:2px 0}
+/* 1.4.4 : photos de l'engin et des outils dans la fiche (choix B de Luxo) */
+.fphoto{width:120px;height:84px;object-fit:contain;background:var(--card2);border:1px solid var(--line);border-radius:12px;flex-shrink:0;padding:4px}
+.kl.tl{align-items:center}.kl.tl>span{display:flex;align-items:center;gap:10px;min-width:0}
+.tphoto{width:60px;height:42px;object-fit:contain;background:var(--card2);border:1px solid var(--line);border-radius:8px;flex-shrink:0;padding:2px}
+.kl span{color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kl b{white-space:nowrap;font-weight:700}
+.kv .label+.kl{margin-top:4px}
+.tag.t-run{background:var(--green);color:var(--onGreen)}.tag.t-miss{background:#e7ae51;color:#1b1206}.tag.t-full{background:#3b7bdc;color:#fff}.tag.t-off,.tag.t-n{background:var(--card2);color:var(--text);border:1px solid var(--line)}
+/* titres de categories qui restent en haut de la liste */
+.vhSec{position:sticky;top:0;z-index:2;background:var(--card);margin:0 -2px;padding-left:8px;padding-right:8px}
+/* lieux regroupes sur la carte */
+.ppin.clu i{width:auto;left:auto;transform:translateX(-50%);padding:0 8px;gap:4px;border-radius:12px;font-weight:800;font-size:12px;color:var(--text);white-space:nowrap;height:24px;top:-12px}
+.ppin.clu{pointer-events:none}
+/* legende repliable (tablette / telephone) */
+.lgtog{cursor:pointer;user-select:none;font-weight:800;white-space:nowrap}
+.lghd{flex-basis:100%;display:flex;justify-content:space-between;gap:10px;margin-bottom:2px}
+.lghd .lgtog{color:var(--muted);font-weight:700}
+.legend.fold{padding:7px 12px}
+/* joueurs : liste au toucher */
+#pPlayers.btn{cursor:pointer}
+#plMenu{position:fixed;z-index:56;display:none;flex-direction:column;gap:4px;padding:8px;min-width:240px;max-width:min(340px,calc(100vw - 16px));box-shadow:0 10px 30px #0008;max-height:calc(100dvh - 80px);overflow:auto}
+#plMenu.open{display:flex}
+#plMenu .pn{padding:9px 12px;border-radius:9px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px}
+#plMenu .pn:hover,#plMenu .pn.on{background:var(--card2)}
+#plMenu .pn .ar{margin-left:auto;font-size:11px;color:var(--muted);transition:transform .15s}#plMenu .pn.on .ar{transform:rotate(90deg)}
+#plMenu .pd{padding:2px 12px 10px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+#plMenu .pd .goBtn{margin-top:2px;padding:8px 0;font-size:13px}
+#plMenu .pd .lnk{padding:7px 12px}
+/* alertes du jeu (batiments, prix) */
+.a-prod{background:#e7ae5122;border-color:#e7ae5177}.a-anim{background:#ef6a5a22;border-color:#ef6a5a77}.a-price{background:#8fe45f1f;border-color:#8fe45f77}
+/* reglages de duree (menu En jeu) */
+#gsDur{display:flex;flex-direction:column;gap:10px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+#gsDur .ln{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#gsDur .ln span.k{width:230px;color:var(--muted);font-size:13px;font-weight:600}
+#gsDur input[type=range]{flex:1;min-width:140px;accent-color:var(--green)}
+#gsDur .v{min-width:56px;text-align:right;font-weight:700}
+#wakeVid{position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
+</style>
+</head>
+<body class="t-carte">
+<div id="top">
+  <svg class="lg" viewBox="44 48 422 330" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"><rect x="58" y="62" width="300" height="210" rx="22"/><line x1="208" y1="272" x2="208" y2="306"/><line x1="160" y1="318" x2="256" y2="318"/></g><g transform="translate(176 192) scale(.95)"><g fill="currentColor"><path d="M-70 4 V-26 a6 6 0 0 1 6-6 H-34 V-66 a6 6 0 0 1 6-6 H10 a6 6 0 0 1 5.7 4.2 L26 -32 H48 a8 8 0 0 1 7.6 5.5 L64 -2 V12 H-70Z"/><rect x="-10" y="-86" width="7" height="16" rx="3"/><path d="M-24 -62 H4 L12 -36 H-24Z" fill="#0b120e"/></g><circle cx="-32" cy="16" r="34" fill="#0b120e" stroke="currentColor" stroke-width="12"/><circle cx="-32" cy="16" r="9" fill="currentColor"/><circle cx="46" cy="26" r="22" fill="#0b120e" stroke="currentColor" stroke-width="10"/><circle cx="46" cy="26" r="6" fill="currentColor"/></g><g transform="translate(330 150)"><rect x="0" y="0" width="122" height="214" rx="22" fill="#0b120e" stroke="currentColor" stroke-width="13"/><rect x="20" y="28" width="82" height="58" rx="6" fill="#9bd636" opacity=".9"/><rect x="20" y="96" width="38" height="40" rx="6" fill="#e8962a"/><rect x="64" y="96" width="38" height="40" rx="6" fill="#5fae4a"/><path d="M48 160 l14 -26 l14 26 l-14 -8z" fill="currentColor"/><rect x="44" y="190" width="34" height="6" rx="3" fill="currentColor"/></g></svg><span class="ttl">Compagnon<b class="ttlFs"> FS25</b></span><span class="sp"></span>
+  <span class="pill hidePhone" id="pMap">🗺 —</span>
+  <span class="pill" id="pWeather">—</span>
+  <span class="pill hide" id="pFc"></span>
+  <span class="pill" id="pTime">—</span>
+  <span class="pill" id="pPlayers"><span class="dot off" id="pDot"></span><span id="pPlayersTxt">—</span></span>
+  <span class="pill btn" id="pGame" title="Affichage dans le jeu">🎮<span class="hidePhone"> En jeu</span></span>
+  <span class="pill btn" id="pMode" title="Affichage">⚙</span>
+</div>
+<div id="fcMenu" class="card"></div>
+<div id="plMenu" class="card"></div>
+<div id="modeMenu">
+  <a data-mode="auto">Affichage : Auto</a><a data-mode="phone">Téléphone</a><a data-mode="tablet">Tablette</a><a data-mode="pc">PC</a>
+  <hr><a id="fsBtn">⛶ Plein écran</a>
+  <div class="mnote hide" id="fsNote"></div>
+  <a class="tg" id="wakeBtn">🔆 Garder l'écran allumé<span class="sw"></span></a>
+  <div class="mnote hide" id="wakeNote"></div>
+  <a id="themeBtn">◐ Thème clair / sombre</a>
+  <a id="phoneBtn" class="hide">📱 Connecter un téléphone / une tablette</a>
+  <hr><a class="tg" id="sndBtn">🔔 Son des alertes<span class="sw"></span></a><a class="tg" id="vibBtn">📳 Vibration<span class="sw"></span></a>
+  <div class="mnote">Vibration : téléphones Android seulement. Les alertes arrivent quand la page est ouverte.</div>
+  <hr><a href="https://discord.gg/xhsWj2e5z3" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">💬 Discord « La Ferme à Luxo »</a>
+  <a href="https://ko-fi.com/leluxo" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">☕ Soutenir le projet</a>
+</div>
+
+<div id="goToast"></div>
+<div id="gameSheet"><div class="card gs">
+  <div class="gsHead"><b>🎮 Affichage dans le jeu</b><span class="sp"></span><button class="gsX" id="gsClose" aria-label="Fermer">✕</button></div>
+  <div class="gsTg">
+    <a class="tg" data-ig="notif">🔔 Alertes du jeu<span class="sw"></span></a>
+    <a class="tg" data-ig="todo">📋 À faire<span class="sw"></span></a>
+    <a class="tg" data-ig="who">👥 Qui fait quoi<span class="sw"></span></a>
+    <a class="tg" data-ig="field">🌾 Entrée dans un champ<span class="sw"></span></a>
+    <a class="tg" data-ig="weather">⛅ Prévisions météo<span class="sw"></span></a>
+    <a class="tg" data-ig="fieldnow">🗺 Champ actuel<span class="sw"></span></a>
+    <a class="tg" data-ig="alerts">🧾 Dernières alertes<span class="sw"></span></a>
+    <a class="tg" data-ig="tp">📍 Téléportation depuis Companion<span class="sw"></span></a>
+  </div>
+  <div class="label" style="margin-top:6px">Durée des alertes</div>
+  <div id="gsDur"></div>
+  <div class="label" style="margin-top:6px">Disposition à l'écran</div>
+  <div class="gsHint">Glisse les blocs pour les placer, et leur coin en bas à droite pour changer largeur et hauteur. Touche un bloc (ou son nom dans la liste) pour régler la taille du texte, la transparence et quand il s'affiche. L'interrupteur l'allume ou l'éteint. Le jeu suit en 3 secondes environ.</div>
+  <div id="gsScreen"></div>
+  <div class="gsHint" id="gsRes" style="margin-top:-4px"></div>
+  <div id="gsEdit"></div>
+  <div class="gsRow"><button class="gsBtn" id="gsReset">↺ Tout remettre par défaut</button><span class="sp"></span>
+    <span class="muted" style="font-size:12px">La touche F9 dans le jeu ouvre / ferme les blocs réglés sur « Avec la touche » (touche modifiable dans Options > Commandes du jeu).</span></div>
+</div></div>
+
+<div id="main">
+  <section class="card" id="plCard"></section>
+  <section class="card" id="mapCard">
+    <div id="mapView"><img id="mapImg" alt="" draggable="false"><svg id="fieldsSvg" preserveAspectRatio="none"><g id="fieldsG"></g></svg><div id="labels"></div><div id="pins"></div></div>
+    <div class="layers" id="layers"><a data-l="0">Aucune</a><a data-l="2">Cultures</a><a data-l="1">Croissance</a><a data-l="3">Composition</a></div>
+    <div class="legend" id="legend"></div>
+    <div class="zoom"><button id="zIn" aria-label="Zoomer">+</button><button id="zOut" aria-label="Dézoomer">−</button><button id="zMe" aria-label="Me suivre" style="font-size:18px">◎</button></div>
+    <div id="mapMsg"></div>
+    <div id="vehPanel" class="none"></div>
+  </section>
+  <section class="card" id="vehCard"></section>
+  <section class="card" id="tblCard"></section>
+  <div id="side">
+    <section class="card" id="ficheCard"><div id="ficheBody"></div><div id="ficheNote" class="hide"><div class="note"><span class="label">📝 Ma note</span>
+      <textarea id="noteIn" placeholder="Écris une note pour ce champ…" maxlength="2000"></textarea><div class="st" id="noteSt">Partagée sur tous tes écrans</div></div></div></section>
+    <section class="card" id="todoCard"></section>
+  </div>
+</div>
+
+<nav id="tabs">
+  <a data-t="carte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Carte</a>
+  <a data-t="champs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/></svg>Champs</a>
+  <a data-t="faire"><span class="badge hide" id="tabBadge"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h12M9 12h12M9 18h12"/><path d="m3 6 1.5 1.5L7 5M3 12l1.5 1.5L7 11M3 18l1.5 1.5L7 17"/></svg>À faire</a>
+  <a data-t="engins"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 15V9h7l2 4h6a3 3 0 0 1 3 3v1H3z"/><circle cx="7" cy="18" r="2.5"/><circle cx="17.5" cy="18" r="2"/><path d="M5 9V5h4v4"/></svg>Engins</a>
+  <a data-t="joueurs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.4 0 4 1.6 4.6 4.5"/></svg>Joueurs</a>
+</nav>
+
+<div id="phoneSheet"><div class="card ps">
+  <div class="gsHead"><b>📱 Connecter un téléphone / une tablette</b><span class="sp"></span><button class="gsX" id="psClose" aria-label="Fermer">✕</button></div>
+  <div class="psBody">
+    <div class="psQr" id="psQr"></div>
+    <div class="psOpts">
+      <a class="tg psRow" id="psLan"><b>Ouvert au Wi-Fi de la maison</b><span class="sw"></span></a>
+      <div id="psAddr" class="psTxt"></div>
+      <div class="psTxt">1. Le téléphone sur le même Wi-Fi que ce PC<br>2. Ouvre l'appareil photo et scanne le QR code</div>
+      <a class="tg psRow" id="psCode"><span>🔒 Protéger par un code</span><span class="sw"></span></a>
+      <div class="psTxt muted">Facultatif : si tu ne veux pas que n'importe qui sur ton Wi-Fi puisse ouvrir le compagnon, active-le. Chaque appareil devra taper le code une fois.</div>
+      <div id="psCodeVal" class="psTxt"></div>
+      <div class="psRow2"><button class="gsBtn" id="psFw">🛡 Autoriser dans le pare-feu</button><span class="muted" style="font-size:12px">à faire une fois si le téléphone n'arrive pas à se connecter</span></div>
+      <div id="psMsg" class="psTxt"></div>
+    </div>
+  </div>
+</div></div>
+
+<div id="codeBox"><div class="card"><svg viewBox="44 48 422 330" style="width:84px;height:66px;color:#f3efe0"><g fill="none" stroke="currentColor" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"><rect x="58" y="62" width="300" height="210" rx="22"/><line x1="208" y1="272" x2="208" y2="306"/><line x1="160" y1="318" x2="256" y2="318"/></g><g transform="translate(176 192) scale(.95)"><g fill="currentColor"><path d="M-70 4 V-26 a6 6 0 0 1 6-6 H-34 V-66 a6 6 0 0 1 6-6 H10 a6 6 0 0 1 5.7 4.2 L26 -32 H48 a8 8 0 0 1 7.6 5.5 L64 -2 V12 H-70Z"/><rect x="-10" y="-86" width="7" height="16" rx="3"/><path d="M-24 -62 H4 L12 -36 H-24Z" fill="#0b120e"/></g><circle cx="-32" cy="16" r="34" fill="#0b120e" stroke="currentColor" stroke-width="12"/><circle cx="-32" cy="16" r="9" fill="currentColor"/><circle cx="46" cy="26" r="22" fill="#0b120e" stroke="currentColor" stroke-width="10"/><circle cx="46" cy="26" r="6" fill="currentColor"/></g><g transform="translate(330 150)"><rect x="0" y="0" width="122" height="214" rx="22" fill="#0b120e" stroke="currentColor" stroke-width="13"/><rect x="20" y="28" width="82" height="58" rx="6" fill="#9bd636" opacity=".9"/><rect x="20" y="96" width="38" height="40" rx="6" fill="#e8962a"/><rect x="64" y="96" width="38" height="40" rx="6" fill="#5fae4a"/><path d="M48 160 l14 -26 l14 26 l-14 -8z" fill="currentColor"/><rect x="44" y="190" width="34" height="6" rx="3" fill="currentColor"/></g></svg><b style="font-size:18px">Code d'accès</b>
+  <div class="muted" style="text-align:center;font-size:14px">Le code est affiché dans l'application, sur le PC (Mode compagnon).</div>
+  <input id="codeIn" inputmode="numeric" maxlength="8" autocomplete="off"><div class="bad" id="codeErr"></div><button id="codeOk">Valider</button></div></div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ALERT_MAX_AGE = 2 * 3600000;             // une alerte disparait toute seule apres 2 h
+const store = {get(k, d){ try { const v = localStorage.getItem('cp_' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+               set(k, v){ try { localStorage.setItem('cp_' + k, JSON.stringify(v)); } catch (e) {} }};
+
+/* ================= etat ================= */
+const S = {
+  data: null, ok: false, lastOk: 0,
+  mapKey: null, size: 2048,
+  fields: [], byId: {}, fieldsKey: null, fieldsAt: 0, fieldsBusy: false,
+  states: {},
+  known: {},                          // infos vues en passant sur un champ (proprietaire, surface, prix), par carte
+  sel: null,
+  layer: store.get('layer', 2),
+  mode: store.get('mode', 'auto'), cur: null,
+  tab: 'carte',
+  sort: store.get('sort', {k:'id', d:1}), filter: store.get('filter', 'mine'), sideTab: 'champs',
+  view: null, follow: false,
+  notes: {}, notesAt: 0,
+  alerts: store.get('alerts', []).filter(a => Date.now() - (a.at || 0) < ALERT_MAX_AGE), prev: null,
+  snd: store.get('snd', true), vib: store.get('vib', true),
+  hidden: store.get('hidden', {})            // couleurs masquees par couche : {couche:[libelles]}
+};
+
+/* ================= theme / affichage ================= */
+if (store.get('theme', 'dark') === 'light') document.documentElement.classList.add('light');
+function setTheme(light){ document.documentElement.classList.toggle('light', light); store.set('theme', light ? 'light' : 'dark');
+  document.querySelector('meta[name=theme-color]').content = light ? '#ffffff' : '#0c1210'; }
+setTheme(document.documentElement.classList.contains('light'));
+/* 1.4.4 : QR code et Wi-Fi directement dans le compagnon (seulement quand la page est ouverte sur ce PC :
+   /compagnon/info est refuse depuis le Wi-Fi) */
+let psInfo = null;
+function psRender(){
+  const i = psInfo; if (!i) return;
+  $('psLan').querySelector('.sw').classList.toggle('on', !!i.lan);
+  $('psCode').querySelector('.sw').classList.toggle('on', !!i.code);
+  $('psQr').innerHTML = i.lan && i.running && i.qr ? i.qr : (i.lan ? (i.error ? 'Wi-Fi impossible :<br>' + esc(i.error) : 'Démarrage…') : 'Active « Ouvert au Wi-Fi de la maison » pour afficher le QR code');
+  $('psAddr').innerHTML = i.lan && i.urls && i.urls.length ? 'Ou tape cette adresse sur le téléphone :<br>' + i.urls.map(u => '<code>' + esc(u) + '</code>').join('<br>') : '';
+  $('psCodeVal').innerHTML = i.code ? 'Code actuel : <b style="font-size:16px;letter-spacing:.15em">' + esc(i.code) + '</b>' : '';
+}
+function psLoad(){ return fetch('/compagnon/info', {cache:'no-store'}).then(r => r.ok ? r.json() : null).then(j => { if (j && !j.error){ psInfo = j; psRender(); } return j; }).catch(() => null); }
+function psSet(body){
+  $('psMsg').textContent = '';
+  fetch('/compagnon/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)})
+    .then(r => r.json()).then(j => { if (j.error) $('psMsg').textContent = '⚠️ ' + j.error; else { psInfo = j; psRender(); } }).catch(() => { $('psMsg').textContent = '⚠️ Pas de réponse de l\'application.'; });
+}
+psLoad().then(j => { if (j && !j.error) $('phoneBtn').classList.remove('hide'); });
+$('phoneBtn').onclick = e => { e.stopPropagation(); closeMenu(); $('phoneSheet').classList.add('open'); psLoad(); };
+$('psClose').onclick = () => $('phoneSheet').classList.remove('open');
+$('phoneSheet').addEventListener('click', e => { if (e.target.id === 'phoneSheet') $('phoneSheet').classList.remove('open'); });
+$('psLan').onclick = () => { if (psInfo) psSet({lan: !psInfo.lan}); };
+$('psCode').onclick = () => {
+  if (!psInfo) return;
+  if (psInfo.code){ psSet({code: ''}); return; }
+  const c = prompt('Choisis un code de 4 à 8 chiffres :', String(Math.floor(1000 + Math.random() * 9000)));
+  if (c !== null) psSet({code: c.trim()});
+};
+$('psFw').onclick = () => fetch('/compagnon/firewall', {method:'POST'}).then(r => r.json()).then(j => { $('psMsg').textContent = (j.ok ? '✓ ' : '⚠️ ') + (j.message || j.error || ''); }).catch(() => {});
+$('themeBtn').onclick = () => { setTheme(!document.documentElement.classList.contains('light')); closeMenu(); };
+$('pMode').onclick = e => { e.stopPropagation(); if (typeof renderFs === 'function') renderFs(); $('modeMenu').classList.toggle('open'); };
+const closeMenu = () => $('modeMenu').classList.remove('open');
+document.addEventListener('click', e => { if (!$('modeMenu').contains(e.target)) closeMenu(); });
+document.querySelectorAll('#modeMenu a[data-mode]').forEach(a => a.onclick = () => { S.mode = a.dataset.mode; store.set('mode', S.mode); closeMenu(); applyMode(); });
+
+function autoMode(){
+  const w = innerWidth, h = innerHeight;
+  const fine = matchMedia('(pointer:fine)').matches;
+  if (Math.min(w, h) < 600 || w < 700) return 'phone';
+  if (w >= 1280 && (fine || w >= 1600)) return 'pc';
+  return 'tablet';
+}
+function applyMode(){
+  const m = S.mode === 'auto' ? autoMode() : S.mode;
+  const b = document.body;
+  b.classList.remove('phone', 'tablet', 'pc');
+  b.classList.add(m);
+  b.classList.toggle('portrait', innerHeight > innerWidth);
+  document.querySelectorAll('#modeMenu a[data-mode]').forEach(a => a.classList.toggle('on', a.dataset.mode === S.mode));
+  $('pMode').textContent = {phone:'📱', tablet:'📱', pc:'🖥'}[m] + (m === 'phone' ? '' : (S.mode === 'auto' ? ' Auto' : ' ' + {tablet:'Tablette', pc:'PC'}[m]));
+  const changed = S.cur !== m; S.cur = m;
+  if (changed){ renderAll(); requestAnimationFrame(() => { fitIfNeeded(true); drawMap(); }); }
+}
+addEventListener('resize', () => { applyMode(); renderTop(); requestAnimationFrame(() => { clampView(); drawMap(); }); });
+
+/* onglets telephone */
+function setTab(t){
+  S.tab = t;
+  ['carte', 'champs', 'faire', 'joueurs', 'engins'].forEach(x => document.body.classList.toggle('t-' + x, x === t));
+  document.querySelectorAll('#tabs a').forEach(a => a.classList.toggle('on', a.dataset.t === t));
+  if (t === 'carte') requestAnimationFrame(() => { clampView(); drawMap(); });
+  if (t === 'faire' && typeof renderTodo === 'function'){ $('todoCard')._h = null; renderTodo(); }
+}
+document.querySelectorAll('#tabs a').forEach(a => a.onclick = () => setTab(a.dataset.t));
+setTab('carte');
+
+/* ================= couleurs (memes regles que la mini-carte du stream) ================= */
+const WEATHER = {SUN:'☀️ Ensoleillé',CLEAR:'☀️ Dégagé',CLOUDY:'☁️ Nuageux',RAIN:'🌧️ Pluie',SNOW:'❄️ Neige',
+  HAIL:'🌨️ Grêle',FOG:'🌫️ Brouillard',THUNDER:'⛈️ Orage',TWISTER:'🌪️ Tornade'};
+const MONTHS = ['Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre','Janvier','Février'];
+const CROP_COLORS = ['#f2c14e','#e76f51','#8ecae6','#b5e48c','#cdb4db','#ffafcc','#90be6d','#f9844a','#43aa8b','#f8961e','#577590','#d4a373'];
+const mix = (a, b, t) => { t = Math.max(0, Math.min(1, t)); const p = h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16));
+  const A = p(a), B = p(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
+const lin2hex = v => { v = Math.max(0, Math.min(1, v)); const c = v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055; return Math.round(c * 255).toString(16).padStart(2, '0'); };
+function cropColor(st){
+  if (typeof st.fc === 'string'){ const a = st.fc.split(',').map(Number); if (a.length >= 3 && a.every(isFinite)) return '#' + a.slice(0, 3).map(lin2hex).join(''); }
+  return CROP_COLORS[(st.fi || 0) % CROP_COLORS.length];
+}
+function growthCat(st){
+  if (st.wither) return ['Fané', '#6e4423'];
+  if (st.cut) return ['Récolté', '#8f5aa8'];
+  if (st.prep) return ['Retirer les fanes', '#d9412a'];
+  if (st.ready) return ['Prêt à récolter', '#e8962a'];
+  if (st.fi) return ['En croissance', mix('#2f6f2a', '#a6e35a', (st.gp || 0) / 100)];
+  const gt = String(st.gt || '').toUpperCase();
+  if (gt.includes('STUBBLE')) return ['Labour superficiel', '#86c3a3'];
+  if (gt.includes('PLOW')) return ['Labouré', '#4a3550'];
+  if (gt.includes('SEEDBED')) return ['Lit de semences', '#4ed7b4'];
+  if (gt.includes('CULTIV') || gt.includes('TILL')) return ['Travaillé', '#57a3e0'];
+  if (gt.includes('GRASS')) return ['Herbe', '#5fae4a'];
+  return null;
+}
+function fieldFill(st, layer){
+  if (!st) return null;
+  if (layer === 1){ const c = growthCat(st); return c ? {color:c[1], label:c[0], key:c[0] === 'En croissance' ? '#3d8c33' : c[1]} : null; }
+  if (layer === 2){ if (!st.fi) return null; const c = cropColor(st); return {color:c, label:st.fn || 'Culture', key:c}; }
+  if (layer === 3){
+    if (st.lp === 0) return {color:'#4fd6b4', label:'A besoin de chaux'};
+    if (st.pp === 0) return {color:'#0b0b0b', label:'Doit être labouré'};
+    if (typeof st.sp === 'number' && st.sp >= 100) return {color:'#003a9a', label:'Fertilisé'};
+    if (typeof st.sp === 'number' && st.sp > 0) return {color:'#1a5fcf', label:'Fertilisé (en partie)'};
+    return null;
+  }
+  return null;
+}
+/* texte d'etat d'un champ (fiche, tableau) */
+function stateText(st){
+  if (!st) return {txt:'—', pct:null, col:null};
+  if (st.wither) return {txt:'Fané', pct:0, col:'#6e4423'};
+  if (st.cut) return {txt:'Récolté', pct:0, col:'#8f5aa8'};
+  if (st.prep) return {txt:'Retirer les fanes', pct:100, col:'#d9412a'};
+  if (st.ready) return {txt:'Prêt à récolter', pct:100, col:'#e8962a'};
+  if (st.fi) return {txt:(typeof st.gp === 'number' ? st.gp + ' %' : 'En croissance'), pct:st.gp || 0, col:null};
+  const c = growthCat(st);
+  return {txt:c ? c[0] : 'Vide', pct:null, col:null};
+}
+const fmtHa = v => (typeof v === 'number' && isFinite(v)) ? v.toFixed(2).replace('.', ',') + ' ha' : '—';
+const fmtInt = n => Number(n).toLocaleString('fr-FR', {maximumFractionDigits:0});
+const FC_ICON = {SUN:'☀️', CLEAR:'☀️', PARTIALLY_CLOUDY:'⛅', CLOUDY:'☁️', RAIN:'🌧️', THUNDER:'⛈️', SNOW:'❄️', HAIL:'🌨️', FOG:'🌫️', TWISTER:'🌪️'};
+const FC_NAME = {SUN:'Ensoleillé', CLEAR:'Dégagé', PARTIALLY_CLOUDY:'Éclaircies', CLOUDY:'Nuageux', RAIN:'Pluie', THUNDER:'Orage', SNOW:'Neige', HAIL:'Grêle', FOG:'Brouillard', TWISTER:'Tornade'};
+const cleanMap = s => String(s || '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+
+/* couleur stable par joueur */
+const PCOL = ['#5bc0f2', '#f2a65b', '#e57bd8', '#f2e05b', '#7bd8c4', '#c49bf2', '#f27b7b'];
+function playerColor(p){ if (p.self) return '#8fe45f'; let h = 0; for (const ch of String(p.name || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return PCOL[h % PCOL.length]; }
+
+/* ================= champs : formes, surfaces ================= */
+function polyArea(p){ let a = 0; const n = p.length - (p.length % 2); for (let i = 0; i < n; i += 2){ const j = (i + 2) % n; a += p[i] * p[j + 1] - p[j] * p[i + 1]; } return Math.abs(a) / 2; }
+function inPoly(x, z, p){ let c = false; for (let i = 0, j = p.length - 2; i < p.length; j = i, i += 2){
+  const xi = p[i], zi = p[i + 1], xj = p[j], zj = p[j + 1];
+  if (((zi > z) !== (zj > z)) && (x < (xj - xi) * (z - zi) / (zj - zi) + xi)) c = !c; } return c; }
+function fieldAt(x, z){
+  for (const f of S.fields){
+    if (x < f.bb[0] || x > f.bb[2] || z < f.bb[1] || z > f.bb[3]) continue;
+    let inside = false; for (const p of f.polys) if (inPoly(x, z, p)) inside = !inside;
+    if (inside) return f;
+  }
+  return null;
+}
+function loadFields(key){
+  if (S.fieldsBusy) return; S.fieldsBusy = true;
+  fetch('/fields.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.json() : null).then(j => {
+    const list = (j && Array.isArray(j.fields)) ? j.fields.filter(f => Array.isArray(f.polys) && f.polys.length && f.polys.every(p => Array.isArray(p) && p.length >= 6 && p.every(v => Math.abs(v) < 10000))) : [];
+    S.fields = list.map(f => {
+      let bb = [1e9, 1e9, -1e9, -1e9], area = 0;
+      f.polys.forEach(p => { area += polyArea(p); for (let i = 0; i < p.length; i += 2){ bb[0] = Math.min(bb[0], p[i]); bb[1] = Math.min(bb[1], p[i + 1]); bb[2] = Math.max(bb[2], p[i]); bb[3] = Math.max(bb[3], p[i + 1]); } });
+      const cx = typeof f.cx === 'number' ? f.cx : (bb[0] + bb[2]) / 2, cz = typeof f.cz === 'number' ? f.cz : (bb[1] + bb[3]) / 2;
+      return {id:f.id, polys:f.polys, bb, cx, cz, haPoly:area / 10000};
+    }).sort((a, b) => a.id - b.id);
+    S.byId = {}; S.fields.forEach(f => { S.byId[f.id] = f; });
+    S.fieldsKey = key; S.fieldsAt = Date.now();
+    buildFieldPaths(); renderAll(); fitIfNeeded(); drawMap();
+  }).catch(() => {}).finally(() => { S.fieldsBusy = false; });
+}
+
+/* infos apprises en passant sur un champ (le mod ne les donne que pour le champ ou l'on est) */
+function learnField(fi){
+  if (!fi || !fi.onField || typeof fi.number !== 'number' || !S.mapKey) return;
+  const k = S.known[fi.number] || {};
+  let ch = false;
+  const put = (name, v) => { if (v !== undefined && k[name] !== v){ k[name] = v; ch = true; } };
+  if (typeof fi.areaHa === 'number') put('ha', Math.round(fi.areaHa * 100) / 100);
+  if (typeof fi.ownerFarmId === 'number'){ put('ofi', fi.ownerFarmId); put('own', fi.owner || null); put('price', fi.ownerFarmId === 0 && typeof fi.price === 'number' ? fi.price : null); }
+  if (ch){ k.at = Date.now(); S.known[fi.number] = k; store.set('known_' + S.mapKey, S.known); }
+}
+function myFarm(){
+  const d = S.data || {}, g = d.game || {};
+  if (typeof g.farmId === 'number' && g.farmId > 0) return g.farmId;
+  const me = (Array.isArray(d.players) ? d.players : []).find(p => p.self);
+  return me && typeof me.farmId === 'number' ? me.farmId : null;
+}
+const hasOwnerData = () => Object.values(S.states).some(st => typeof st.of === 'number');
+function fieldInfo(id){
+  const f = S.byId[id], st = S.states[id], k = S.known[id] || {};
+  const exact = st && typeof st.ha === 'number' ? st.ha : (typeof k.ha === 'number' ? k.ha : null);
+  const ha = exact != null ? exact : (f ? f.haPoly : null);
+  const ofi = st && typeof st.of === 'number' ? st.of : (typeof k.ofi === 'number' ? k.ofi : null);
+  const oname = st && typeof st.of === 'number' ? st.on : k.own;
+  const mf = myFarm();
+  let owner = null;
+  if (ofi != null) owner = ofi === 0 ? 'À vendre' : (oname || (ofi === mf ? 'Ma ferme' : 'Ferme n° ' + ofi));
+  const price = st && typeof st.pr === 'number' ? st.pr : k.price;
+  return {f, st, ha, haApprox:exact == null, owner, ofi, mine:ofi != null && mf != null && ofi === mf, price:ofi === 0 ? price : null, known:k};
+}
+
+/* ================= donnees du jeu ================= */
+let pollTimer = null;
+function poll(){
+  fetch('/data.json?t=' + Date.now(), {cache:'no-store', credentials:'same-origin'}).then(r => {
+    if (r.status === 401){ showCode(); return null; }
+    return r.ok ? r.json() : null;
+  }).then(d => { if (d) onData(d); else if (d === null && !$('codeBox').classList.contains('show')) setConn(false); })
+    .catch(() => setConn(false)).finally(() => { pollTimer = setTimeout(poll, 1000); });
+}
+function setConn(ok){ S.ok = ok; if (!ok) renderTop(); }
+
+function onData(d){
+  S.data = d; S.ok = true; S.lastOk = Date.now();
+  const mi = d.mapInfo || {};
+  S.size = (typeof mi.size === 'number' && mi.size > 0) ? mi.size : ((typeof mi.width === 'number' && mi.width > 0) ? mi.width : 2048);
+  const key = mi.mapXml || mi.image || mi.title || (d.game && d.game.map) || '';
+  if (key && key !== S.mapKey){
+    S.mapKey = key;
+    const keep = S.alerts.filter(a => a.m === key && Date.now() - (a.at || 0) < ALERT_MAX_AGE);   // alertes d'une autre partie / carte : effacees
+    if (keep.length !== S.alerts.length){ S.alerts = keep; saveAlerts(); }
+    S.known = store.get('known_' + key, {}); S.view = null; S.prev = null; S.notes = {}; S.noteFor = null; loadNotes();
+    const img = $('mapImg'); img.classList.remove('err');
+    img.onerror = () => img.classList.add('err');
+    img.onload = () => drawMap();
+    img.src = '/img/map?k=' + encodeURIComponent(key) + '&v=2';
+  }
+  if (d.session !== false && key && (S.fieldsKey !== key || (!S.fields.length && Date.now() - S.fieldsAt > 15000))) loadFields(key);
+  S.states = {}; (Array.isArray(d.fieldStates) ? d.fieldStates : []).forEach(st => { if (st && st.id != null) S.states[st.id] = st; });
+  learnField(d.field);
+  if (Date.now() - S.notesAt > 20000) loadNotes();
+  checkAlerts();
+  if (d.session !== false) checkGameAlerts(d);
+  renderAll(); fitIfNeeded(); drawMap();
+  checkGoAck(d);
+}
+
+/* ================= rendu : bandeau ================= */
+const AFK_GREY = '#8a948d';
+function afkTxt(p){ return typeof p.afk === 'number' && p.afk >= 5 ? '💤 AFK · ' + p.afk + ' min' : ''; }
+function players(){
+  const d = S.data || {};
+  return (Array.isArray(d.players) ? d.players : []).filter(p => typeof p.x === 'number' && typeof p.z === 'number')
+    .map(p => Object.assign({}, p, {col:afkTxt(p) ? AFK_GREY : playerColor(p), field:fieldAt(p.x, p.z)}));
+}
+function renderTop(){
+  const d = S.data || {}, g = d.game || {};
+  const live = S.ok && d.session !== false;
+  $('pMap').textContent = '🗺 ' + (cleanMap(g.map || (d.mapInfo || {}).title) || '—');
+  const w = g.weather ? (WEATHER[String(g.weather).toUpperCase()] || g.weather) : '';
+  const ph = document.body.classList.contains('phone');
+  const wi = w.split(' ')[0], wn = w.split(' ').slice(1).join(' ');
+  const wh = (typeof g.temperature === 'number' ? Math.round(g.temperature) + (ph ? '° ' : '°C ') : '') + esc(wi) + (!ph && wn ? '<span class="wn"> ' + esc(wn) + '</span>' : '');
+  if ($('pWeather')._h !== wh){ $('pWeather').innerHTML = wh || '—'; $('pWeather')._h = wh; }
+  if (typeof g.hour === 'number'){
+    const mo = (typeof g.period === 'number' && g.period >= 1 && g.period <= 12) ? MONTHS[Math.round(g.period) - 1] : '';
+    const hm = String(g.hour).padStart(2, '0') + ':' + String(g.minute || 0).padStart(2, '0');
+    const ts = typeof g.timeScale === 'number' ? (g.timeScale === 0 ? ' ⏸' : ' ×' + (Number.isInteger(g.timeScale) ? g.timeScale : g.timeScale.toFixed(1))) : '';
+    $('pTime').textContent = (document.body.classList.contains('phone') ? hm : (g.day != null ? 'Jour ' + g.day + (mo ? ' · ' + mo : '') + ' · ' : '') + hm) + ts;
+  } else $('pTime').textContent = '—';
+  const n = players().length;
+  $('pDot').className = 'dot' + (!S.ok ? ' off' : (live ? '' : ' idle'));
+  $('pPlayersTxt').textContent = !S.ok ? 'Hors ligne' : (!live ? 'Hors partie' : (document.body.classList.contains('phone') ? String(n) : n + (n > 1 ? ' joueurs' : ' joueur')));
+  $('pPlayers').classList.toggle('btn', live);
+  if (!live) $('plMenu').classList.remove('open'); else renderPlMenu();
+  $('pWeather').classList.toggle('hide', !live);
+  renderForecast(live ? g.forecast : null);
+  fitTop();
+  $('pTime').classList.toggle('hide', !live);
+  const msg = !S.ok ? "L'application ne répond pas.<br><span class='muted' style='font-weight:600'>Elle est lancée sur le PC ?</span>"
+    : (!live ? 'En attente du jeu…<br><span class="muted" style="font-weight:600">Lance une partie de FS25.</span>'
+    : (!S.fields.length ? 'Chargement des champs…' : ''));
+  $('mapMsg').innerHTML = msg; $('mapMsg').style.display = msg ? 'block' : 'none';
+}
+
+/* ================= previsions meteo : dans le bandeau (PC / tablette), liste au toucher (telephone) ================= */
+function fcList(list){
+  const prio = it => it.hours <= 3 ? 0 : it.hours <= 6 ? 1 : it.hours <= 12 && it.dayOffset < 1 ? 2 : (it.dayOffset >= 1 && it.hours > 12) ? 3 + it.dayOffset : 2.5;
+  return (Array.isArray(list) ? list : []).slice().sort((a, b) => prio(a) - prio(b)).map(it => ({
+    icon:FC_ICON[String(it.type).toUpperCase()] || '·', name:FC_NAME[String(it.type).toUpperCase()] || '',
+    label:(it.dayOffset >= 1 && it.hours > 12) ? (it.dayOffset === 1 ? 'Demain' : 'J+' + it.dayOffset) : '+' + Math.round(it.hours) + 'h',
+    temp:typeof it.temperature === 'number' ? Math.round(it.temperature) + '°' : ''}));
+}
+// bandeau trop large : on retire des choses dans l'ordre (nom de la carte, texte meteo, titre, previsions lointaines, puis liste au toucher)
+const TOP_STEPS = ['tb-map', 'tb-wn', 'tb-ttl', 'tb-fc3', 'tb-nofc'];
+function fitTop(){
+  const b = document.body, t = $('top');
+  TOP_STEPS.forEach(c => b.classList.remove(c));
+  renderForecast(S.data && S.data.game && S.ok && S.data.session !== false ? S.data.game.forecast : null);
+  for (const c of TOP_STEPS){
+    if (t.scrollWidth <= t.clientWidth + 1) break;
+    b.classList.add(c);
+    if (c === 'tb-nofc') renderForecast(S.data && S.data.game ? S.data.game.forecast : null);
+  }
+}
+function renderForecast(list){
+  const L = fcList(list), inline = L.length && !document.body.classList.contains('phone') && !document.body.classList.contains('tb-nofc') && innerWidth >= 900;
+  const pf = $('pFc'), pw = $('pWeather');
+  const html = L.map(x => `<span>${x.icon} <b>${esc(x.label)}</b> ${esc(x.temp)}</span>`).join('<span class="sep">·</span>');
+  if (pf._h !== html){ pf.innerHTML = html; pf._h = html; }
+  pf.classList.toggle('hide', !inline);
+  pw.classList.toggle('fcbtn', !!L.length && !inline);
+  const menu = $('fcMenu');
+  const mh = '<span class="label">Prévisions</span>' + L.map(x => `<div class="r"><span class="i">${x.icon}</span><b style="width:70px">${esc(x.label)}</b><span class="muted" style="flex:1">${esc(x.name)}</span><b>${esc(x.temp)}</b></div>`).join('');
+  if (menu._h !== mh){ menu.innerHTML = mh; menu._h = mh; }
+  if (inline || !L.length) menu.classList.remove('open');
+}
+$('pWeather').addEventListener('click', e => {
+  if (!$('pWeather').classList.contains('fcbtn')) return;
+  e.stopPropagation();
+  const m = $('fcMenu'), r = $('pWeather').getBoundingClientRect();
+  m.style.top = (r.bottom + 6) + 'px'; m.style.left = Math.max(8, Math.min(innerWidth - 246, r.left - 60)) + 'px';
+  m.classList.toggle('open');
+});
+document.addEventListener('click', e => { if (!$('fcMenu').contains(e.target)) $('fcMenu').classList.remove('open'); });
+
+/* ================= joueurs : liste des noms au toucher de la pastille « 2 joueurs » ================= */
+S.plOpen = null;                                        // nom du joueur deplie dans la liste
+function renderPlMenu(){
+  const m = $('plMenu'); if (!m.classList.contains('open')) return;
+  const others = players().filter(p => !p.self);
+  let h = '<span class="label" style="padding:4px 12px 2px">Joueurs</span>';
+  if (!others.length) h += '<div class="pd muted" style="padding:8px 12px">Tu es seul dans la partie.</div>';
+  others.forEach(p => {
+    const on = S.plOpen === p.name;
+    h += `<div class="pn${on ? ' on' : ''}" data-pn="${esc(p.name)}">${esc(p.name || 'Joueur')}${afkTxt(p) ? `<span class="afkt">${afkTxt(p)}</span>` : ''}<span class="ar"${afkTxt(p) ? ' style="margin-left:0"' : ''}>▸</span></div>`;
+    if (!on) return;
+    const w = workOf(p), st = p.field ? S.states[p.field.id] : null;
+    const where = p.field ? 'Champ ' + p.field.id + (st && st.fn ? ' · ' + st.fn : '') : (p.vehicle ? 'Hors champ' : 'À pied');
+    const tools = toolsOfPlayer(p);
+    h += `<div class="pd"><div class="kl"><span>Où</span><b>${esc(where)}</b></div>
+      ${w ? `<div class="kl"><span>Travail</span><b>${esc(w.t)}${w.on ? '' : ' (à l\'arrêt)'}</b></div>` : ''}
+      ${tools[0] ? `<div class="kl"><span>Véhicule</span><b>${esc(tools[0].n)}</b></div>` : ''}
+      ${tools.slice(1).map(t => `<div class="kl"><span>Outil</span><b>${esc(t.n)}${typeof t.f === 'number' ? ' · ' + t.f + ' %' : ''}</b></div>`).join('')}
+      ${tpOn() ? `<button class="goBtn" data-pgo="${esc(p.name)}">📍 Aller vers lui</button>` : ''}
+      <div class="lnk" data-pc="${esc(p.name)}">🗺 Centrer la carte</div></div>`;
+  });
+  if (m._h === h) return;
+  m.innerHTML = h; m._h = h;
+  m.querySelectorAll('[data-pn]').forEach(el => el.onclick = e => { e.stopPropagation(); S.plOpen = S.plOpen === el.dataset.pn ? null : el.dataset.pn; renderPlMenu(); });
+  m.querySelectorAll('[data-pgo]').forEach(el => el.onclick = e => { e.stopPropagation(); m.classList.remove('open'); goTo('player', el.dataset.pgo, el.dataset.pgo); });
+  m.querySelectorAll('[data-pc]').forEach(el => el.onclick = e => { e.stopPropagation(); m.classList.remove('open');
+    const p = players().find(q => q.name === el.dataset.pc); if (!p) return;
+    if (document.body.classList.contains('phone')) setTab('carte');
+    S.follow = false; $('zMe').classList.remove('on');
+    centerWorld(p.x, p.z, Math.max(S.view ? S.view.s : 0, fitScale() * 4)); });
+}
+$('pPlayers').addEventListener('click', e => {
+  if (!$('pPlayers').classList.contains('btn')) return;
+  e.stopPropagation();
+  const m = $('plMenu'), r = $('pPlayers').getBoundingClientRect();
+  m.classList.toggle('open'); m._h = null;
+  m.style.top = (r.bottom + 6) + 'px'; m.style.left = Math.max(8, Math.min(innerWidth - Math.min(340, innerWidth - 16) - 8, r.left - 40)) + 'px';
+  renderPlMenu();
+});
+document.addEventListener('click', e => { if (!$('plMenu').contains(e.target)) $('plMenu').classList.remove('open'); });
+
+/* ================= rendu : fiche ================= */
+function onFieldPlayers(id){ return players().filter(p => p.field && p.field.id === id); }
+function hideNote(){ if (noteTimer) saveNote(); $('ficheNote').classList.add('hide'); S.noteFor = null; }
+/* fiche d'un batiment / silo / point de vente, ou d'un engin (memes cases que la fiche d'un champ, chiffres « 32 / 50 », sans barres) */
+const nb = v => Math.round(v).toLocaleString('fr-FR').replace(/[  ]/g, ' ');
+const PLACE_KIND = {home:'maison', animals:'animaux', silo:'silo', prod:'production', sell:'point de vente', building:'bâtiment'};
+const PROD_ST = {run:['En marche', 't-run'], miss:['Il manque des produits', 't-miss'], full:['Stock de sortie plein', 't-full'], off:["À l'arrêt", 't-off']};
+function placeFicheHTML(p){
+  const kl = (k, v, cls) => `<div class="kl"><span>${esc(k)}</span><b${cls ? ` class="${cls}"` : ''}>${v}</b></div>`;
+  const fillLine = f => { const c = typeof f.c === 'number' && f.c > 0 ? f.c : null, l = Number(f.l) || 0;
+    return kl(f.t || '?', esc(nb(l)) + (c ? ' / ' + esc(nb(c)) : '') + ' L', c && l <= 0 ? 'bad' : (c && l >= c * 0.98 ? 'warn' : '')); };
+  let tag = '', body = '';
+  if (typeof p.an === 'number'){
+    tag = `<span class="tag t-n">${p.an}${typeof p.max === 'number' && p.max > 0 ? ' / ' + p.max : ''}</span>`;
+    body += `<div class="kv"><span class="label">Animaux</span>${kl('Animaux', esc(p.an) + (typeof p.max === 'number' && p.max > 0 ? ' / ' + esc(p.max) : ''))}</div>`;
+    let need = '';
+    if (typeof p.food === 'number') need += kl('Nourriture', esc(nb(p.food)) + (typeof p.foodCap === 'number' && p.foodCap > 0 ? ' / ' + esc(nb(p.foodCap)) : '') + ' L',
+      typeof p.foodCap === 'number' && p.foodCap > 0 && p.food < p.foodCap * 0.2 ? 'warn' : '');
+    // le mod envoie deja des pourcentages (0-100). Barres « inversees » du jeu = produits qui se remplissent (lisier, fumier, lait…)
+    let prod = '';
+    (Array.isArray(p.cond) ? p.cond : []).forEach(c => { if (typeof c.r !== 'number') return; const pc = Math.max(0, Math.min(100, Math.round(c.r)));
+      if (c.inv) prod += kl(c.t || '?', pc + ' %' + (pc >= 95 ? ' (plein)' : ''), pc >= 80 ? 'warn' : '');
+      else need += kl(c.t || '?', pc + ' %', pc < 20 ? 'warn' : ''); });
+    if (need) body += `<div class="kv"><span class="label">Besoins</span>${need}</div>`;
+    if (prod) body += `<div class="kv"><span class="label">Produits (remplissage)</span>${prod}</div>`;
+  }
+  if (Array.isArray(p.inp) || Array.isArray(p.out)){
+    const st = PROD_ST[p.st] || PROD_ST.off;
+    if (!tag) tag = `<span class="tag ${st[1]}">${st[0]}</span>`;
+    const inp = Array.isArray(p.inp) ? p.inp : [], out = Array.isArray(p.out) ? p.out : [];
+    if (inp.length) body += `<div class="kv"><span class="label">Entrées</span>${inp.map(fillLine).join('')}</div>`;
+    if (out.length) body += `<div class="kv"><span class="label">Sorties</span>${out.map(fillLine).join('')}</div>`;
+    const miss = inp.filter(f => !(Number(f.l) > 0)).map(f => f.t);
+    if (p.st === 'miss' && miss.length) body += `<div class="kv">${kl('Il manque', esc(miss.join(', ')), 'warn')}</div>`;
+  }
+  if (p.k === 'silo'){
+    const F = Array.isArray(p.fill) ? p.fill : [];
+    tag = `<span class="tag t-n">${F.length} produit${F.length > 1 ? 's' : ''}</span>`;
+    body += `<div class="kv"><span class="label">Contenu</span>${F.length ? F.map(f => kl(f.t || '?', esc(nb(f.l || 0)) + ' L')).join('') : '<div class="fsub">Vide</div>'}</div>`;
+    if (F.length > 1) body += `<div class="kv">${kl('Total', esc(nb(F.reduce((a, f) => a + (Number(f.l) || 0), 0))) + ' L')}</div>`;
+  }
+  const sub = (p.pub ? 'Public' : 'Ma ferme') + ' · ' + (PLACE_KIND[p.k] || 'lieu');
+  return `<div class="grab" id="grab"></div><div class="fiche">
+    <div class="fh"><div class="fic">${PLACE_IC[p.k] || '📍'}</div><div style="flex:1;min-width:0"><div class="fname">${esc(placeName(p))}</div><div class="fsub">${esc(sub)}</div></div>${tag}<button class="close" id="ficheClose" aria-label="Fermer">✕</button></div>
+    ${body}
+    ${tpOn() ? '<button class="goBtn" id="ficheGo">📍 Y aller dans le jeu</button>' : ''}
+    ${document.body.classList.contains('phone') ? '' : '<div class="lnk" id="ficheCenter">Centrer la carte</div>'}
+  </div>`;
+}
+function vehFicheHTML(v){
+  const occ = !!v.occ && !v.me, fuel = typeof v.fuel === 'number' ? v.fuel : null;
+  const vf = typeof v.x === 'number' ? fieldAt(v.x, v.z) : null;
+  const tag = v.me ? '<span class="tag t-run">Toi</span>' : occ ? `<span class="tag t-n">👤 ${esc(v.occ)}</span>` : '';
+  const pl = v.me ? players().find(p => p.self) : occ ? players().find(p => p.name === v.occ) : null;
+  const fvT = Array.isArray(v.t) ? v.t : null;
+  const tools = fvT && fvT.length ? fvT.map((t, i) => Object.assign({}, t, {_i: i})).filter(t => t && t.n) : (pl ? toolsOfPlayer(pl).slice(1) : []), w = pl ? workOf(pl) : null;
+  let body = `<div class="grid2"><div class="kv"><span class="label">Carburant</span><div class="v ${fuel != null && fuel < 15 ? 'bad' : fuel != null && fuel < 35 ? 'warn' : ''}">${fuel != null ? fuel + ' %' : '—'}</div></div>
+    <div class="kv"><span class="label">État</span><div class="v">${typeof v.cond === 'number' ? Math.round(v.cond) + ' %' : '—'}</div></div></div>`;
+  const vid = encodeURIComponent(v.id);
+  if (tools.length) body += `<div class="kv"><span class="label">Outils attelés</span>${tools.map(t => `<div class="kl tl"><span>${t.img || t.xml ? `<img class="tphoto" src="/img/fv/${vid}/${t._i}" alt="" onerror="this.remove()">` : ''}${esc(t.n)}</span><b>${typeof t.f === 'number' ? esc(t.ft || 'Rempli') + ' ' + t.f + ' %' : ''}</b></div>`).join('')}</div>`;
+  if (w) body += `<div class="kv"><span class="label">Travail</span><div class="kl"><span>${w.on ? 'En cours' : 'Prêt'}</span><b>${esc(w.t)}${vf ? ' · Champ ' + esc(vf.id) : ''}</b></div></div>`;
+  const btn = !tpOn() || v.me ? '' : occ ? `<button class="goBtn" disabled>Occupé par ${esc(v.occ)}</button>` : '<button class="goBtn" id="ficheGo">🚜 Monter dedans</button>';
+  return `<div class="grab" id="grab"></div><div class="fiche">
+    <div class="fh">${v.img || v.xml ? `<img class="fphoto" src="/img/fv/${vid}" alt="" onerror="this.outerHTML='<div class=&quot;fic&quot;>🚜</div>'">` : '<div class="fic">🚜</div>'}<div style="flex:1;min-width:0"><div class="fname">${esc(v.n || 'Engin')}${v.pl ? '<span class="plate" title="Plaque">' + esc(v.pl) + '</span>' : ''}</div><div class="fsub">${esc([v.b, vf ? 'Champ ' + vf.id : null].filter(Boolean).join(' · ')) || '&nbsp;'}</div></div>${tag}<button class="close" id="ficheClose" aria-label="Fermer">✕</button></div>
+    ${body}${btn}
+    ${document.body.classList.contains('phone') ? '' : '<div class="lnk" id="ficheCenter">Centrer la carte</div>'}
+  </div>`;
+}
+function renderPickFiche(){
+  const box = $('ficheBody');
+  const p = S.placeSel != null ? places().find(x => x.id === S.placeSel) : null;
+  const v = !p && S.vehSel != null ? (farmVehicles() || []).find(x => x.id === S.vehSel) : null;
+  if (!p && !v) return false;
+  hideNote();
+  document.body.classList.add('sheetopen');
+  const html = p ? placeFicheHTML(p) : vehFicheHTML(v);
+  if (box._h === html) return true;
+  box.innerHTML = html; box._h = html;
+  const c = $('ficheClose'); if (c) c.onclick = () => selectField(null);
+  const g = $('grab'); if (g) g.onclick = () => selectField(null);
+  const fc = $('ficheCenter'); if (fc) fc.onclick = () => { const o = p || v; if (typeof o.x === 'number'){ S.follow = false; $('zMe').classList.remove('on'); centerWorld(o.x, o.z, Math.max(S.view ? S.view.s : 0, fitScale() * 4)); } };
+  const fg = $('ficheGo'); if (fg) fg.onclick = () => p ? goPlace(p.id) : goTo('vehicle', v.id, v.n);
+  return true;
+}
+function renderFiche(){
+  const box = $('ficheBody');
+  if (renderPickFiche()) return;
+  if (S.sel == null || !S.byId[S.sel]){
+    const e = '<div class="empty"><b>Touche un champ, un bâtiment ou un engin</b><br>sur la carte ou dans la liste pour voir sa fiche.</div>';
+    if (box._h !== e){ box.innerHTML = e; box._h = e; }
+    document.body.classList.remove('sheetopen');
+    hideNote();
+    return;
+  }
+  renderNoteBox();
+  document.body.classList.add('sheetopen');
+  const I = fieldInfo(S.sel), st = I.st || {}, T = stateText(I.st);
+  const crop = st.fn || (st.fi ? 'Culture' : (I.st ? (growthCat(st) || ['Sans culture'])[0] : 'État inconnu'));
+  const tag = st.ready ? '<span class="tag" style="background:#e8962a;color:#1b1206">Prêt à récolter</span>'
+    : st.prep ? '<span class="tag" style="background:#d9412a;color:#fff">Retirer les fanes</span>'
+    : st.wither ? '<span class="tag" style="background:#6e4423;color:#fff">Fané</span>' : '';
+  const sub = [I.owner ? I.owner + (typeof I.price === 'number' && document.body.classList.contains('phone') ? ' (' + fmtInt(I.price) + ' €)' : '') : null, fmtHa(I.ha) !== '—' ? (I.haApprox ? '≈ ' : '') + fmtHa(I.ha) : null].filter(Boolean).join(' · ');
+  const lime = typeof st.lp === 'number' ? (st.lp === 0 ? '<span class="warn">À chauler</span>' : '<span class="ok">OK</span>') : '—';
+  const plow = typeof st.pp === 'number' ? (st.pp === 0 ? '<span class="warn">À labourer</span>' : '<span class="ok">OK</span>') : '—';
+  const sp = typeof st.sp === 'number' ? st.sp : null;
+  const growthSub = st.ready ? 'Récolte possible maintenant' : st.cut ? 'Champ récolté' : st.wither ? 'La culture a fané' : st.prep ? 'Retirer les fanes avant la récolte'
+    : st.fi ? 'En croissance' : (I.st ? 'Pas de culture' : 'En attente des données du jeu');
+  const on = onFieldPlayers(S.sel);
+  let ownerTxt = I.owner ? esc(I.owner) + (I.mine ? ' <span class="ok">(moi)</span>' : '') : '<span class="muted">Inconnu (mod 1.4 sur le serveur)</span>';
+  const html = `<div class="grab" id="grab"></div><div class="fiche">
+    <div class="fh"><div class="fnum">${esc(S.sel)}</div><div style="flex:1;min-width:0"><div class="fname">Champ ${esc(S.sel)} · ${esc(crop)}</div><div class="fsub">${esc(sub) || '&nbsp;'}</div></div>${tag}<button class="close" id="ficheClose" aria-label="Fermer">✕</button></div>
+    <div class="kv"><div style="display:flex;justify-content:space-between"><span class="label">Croissance</span><b>${T.pct != null ? T.pct + ' %' : esc(T.txt)}</b></div>
+      ${T.pct != null ? `<div class="bar"><i style="width:${T.pct}%;${T.col ? 'background:' + T.col : ''}"></i></div>` : ''}<div class="fsub" style="margin-top:5px">${growthSub}</div></div>
+    <div class="grid2">
+      <div class="kv"><span class="label">Engrais</span><div class="v">${sp != null ? sp + ' %' : '—'}</div>${sp != null ? `<div class="bar"><i style="width:${sp}%;background:var(--blue)"></i></div>` : ''}</div>
+      <div class="kv"><span class="label">Chaux</span><div class="v">${lime}</div></div>
+      <div class="kv"><span class="label">Labour</span><div class="v">${plow}</div></div>
+      <div class="kv"><span class="label">Surface</span><div class="v">${I.ha != null ? (I.haApprox ? '≈ ' : '') + fmtHa(I.ha) : '—'}</div></div>
+    </div>
+    <div class="kv ownerKv"><span class="label">Propriétaire</span><div class="v" style="font-size:15px">${ownerTxt}</div>
+      ${typeof I.price === 'number' ? `<div class="fsub" style="margin-top:3px">Prix : <b style="color:var(--text)">${fmtInt(I.price)} €</b></div>` : ''}</div>
+    ${typeof st.ws === 'number' && st.ws > 0 && st.fi && !st.cut ? '<div class="kv"><span class="label">Mauvaises herbes</span><div class="v warn">Présentes (niveau ' + st.ws + ')</div></div>' : ''}
+    <div class="kv"><span class="label">Sur ce champ</span><div class="onf">${on.length ? on.map(p => `<div><span class="pdot" style="background:${p.col}"></span>${esc(p.name)}<span class="fsub" style="font-weight:600">${p.vehicle ? ' · ' + esc(p.vehicle) : ' · à pied'}${workOf(p) ? ' · ' + esc(workOf(p).t) : ''}</span></div>`).join('') : '<span class="fsub">Personne</span>'}</div></div>
+    ${tpOn() && farmVehicles() ? '<button class="goBtn" id="ficheGo">📍 Y aller dans le jeu</button>' : ''}
+    ${document.body.classList.contains('phone') ? '' : '<div class="lnk" id="ficheCenter">Centrer la carte sur ce champ</div>'}
+  </div>`;
+  if (box._h === html) return;
+  box.innerHTML = html; box._h = html;
+  const c = $('ficheClose'); if (c) c.onclick = () => selectField(null);
+  const g = $('grab'); if (g) g.onclick = () => selectField(null);
+  const fc = $('ficheCenter'); if (fc) fc.onclick = () => centerOn(S.sel);
+  const fg = $('ficheGo'); if (fg) fg.onclick = () => goTo('field', S.sel);
+}
+
+/* ================= rendu : tableau des champs ================= */
+const COLS = [
+  {k:'id', t:'N°'}, {k:'crop', t:'Culture'}, {k:'gp', t:'Croissance'}, {k:'sp', t:'Engrais'},
+  {k:'lp', t:'Chaux'}, {k:'pp', t:'Labour'}, {k:'ha', t:'Surface'}, {k:'own', t:'Propriétaire', pcOnly:true}];
+const FILTERS = [['mine', 'Mes champs'], ['all', 'Tous'], ['ready', 'Prêts'], ['sale', 'À vendre']];
+function rowsData(){
+  return S.fields.map(f => {
+    const I = fieldInfo(f.id), st = I.st || {};
+    return {id:f.id, I, st, crop:st.fn || '', gp:st.ready ? 100 : (st.fi ? (st.gp || 0) : -1), sp:typeof st.sp === 'number' ? st.sp : -1,
+      lp:typeof st.lp === 'number' ? st.lp : -1, pp:typeof st.pp === 'number' ? st.pp : -1, ha:I.ha || 0, own:I.owner || ''};
+  }).filter(r => S.filter === 'all' || (S.filter === 'mine' && r.I.mine) || (S.filter === 'ready' && (r.st.ready || r.st.prep) && (r.I.mine || !hasOwnerData()))
+      || (S.filter === 'sale' && r.I.ofi === 0) || (S.filter === 'crop' && r.st.fi))
+    .sort((a, b) => { const k = S.sort.k, A = a[k], B = b[k];
+      const c = typeof A === 'string' ? A.localeCompare(B, 'fr') : (A - B); return (c * S.sort.d) || (a.id - b.id); });
+}
+function cell(r, k){
+  const st = r.st;
+  if (k === 'id') return `<b>${esc(r.id)}</b>${S.notes[r.id] ? '<span class="nt">📝</span>' : ''}`;
+  if (k === 'crop') return st.fi ? `<span class="cdot" style="background:${cropColor(st)}"></span>${esc(st.fn || 'Culture')}` : `<span class="muted">${esc(stateText(r.I.st).txt)}</span>`;
+  if (k === 'gp'){ if (!st.fi) return '<span class="muted">—</span>'; const T = stateText(st);
+    return `<span class="bar"><i style="width:${T.pct}%;${T.col ? 'background:' + T.col : ''}"></i></span>${st.ready ? '<b class="warn">Prêt</b>' : st.cut ? 'Récolté' : st.wither ? '<span class="bad">Fané</span>' : T.pct + '%'}`; }
+  if (k === 'sp') return r.sp < 0 ? '<span class="muted">—</span>' : `<span class="bar" style="width:46px"><i style="width:${r.sp}%;background:var(--blue)"></i></span>${r.sp}%`;
+  if (k === 'lp') return r.lp < 0 ? '<span class="muted">—</span>' : (r.lp === 0 ? '<span class="warn">À chauler</span>' : '<span class="ok">✓</span>');
+  if (k === 'pp') return r.pp < 0 ? '<span class="muted">—</span>' : (r.pp === 0 ? '<span class="warn">À labourer</span>' : '<span class="ok">✓</span>');
+  if (k === 'ha') return (r.I.haApprox ? '≈ ' : '') + fmtHa(r.I.ha);
+  if (k === 'own') return r.own ? `<span class="${r.own === 'À vendre' ? 'warn' : ''}">${esc(r.own)}</span>` : '<span class="muted">?</span>';
+  return '';
+}
+function renderTable(){
+  const box = $('tblCard'), phone = document.body.classList.contains('phone'), pc = document.body.classList.contains('pc');
+  const tablet = !phone && !pc;
+  if (tablet && S.sideTab === 'faire'){
+    const html = `<div class="tblHead"><span class="label" style="flex:1">À faire</span>${sideSeg()}</div><div class="scroll" style="flex:1;padding:0 8px 10px">${todoHTML()}</div>`;
+    if (box._h !== html){ const sc = box.querySelector('.scroll'), top = sc ? sc.scrollTop : 0; box.innerHTML = html; box._h = html; box.querySelector('.scroll').scrollTop = top; wireSide(); wireTodo(box); }
+    markRead();
+    return;
+  }
+  if (tablet && S.sideTab === 'joueurs'){
+    const html = `<div class="tblHead"><span class="label" style="flex:1">Joueurs</span>${sideSeg()}</div><div class="scroll" style="flex:1;padding:0 8px 10px;display:flex;flex-direction:column;gap:8px">${playersHTML()}</div>`;
+    if (box._h !== html){ box.innerHTML = html; box._h = html; wireSide(); wirePlayers(box); }
+    return;
+  }
+  const rows = rowsData();
+  const segF = `<div class="seg">${FILTERS.map(([k, t]) => `<a data-f="${k}" class="${S.filter === k ? 'on' : ''}">${t}</a>`).join('')}</div>`;
+  const head = `<div class="tblHead"><span class="label" style="flex:1">${S.fields.length ? S.fields.length + ' champs' : 'Champs'}</span>${segF}${tablet ? sideSeg() : ''}</div>`;
+  let body;
+  if (!S.fields.length) body = '<div class="empty">Les champs apparaîtront ici quand une partie sera lancée.</div>';
+  else if (!rows.length) body = '<div class="empty">' + (S.filter === 'mine' && !hasOwnerData() ? 'Les propriétaires des champs arrivent avec le mod 1.4.<br>En attendant, choisis « Tous ».' : 'Aucun champ ici.') + '</div>';
+  else if (phone){
+    const sortSeg = `<div class="seg" style="margin:0 2px 8px">${[['id', 'N°'], ['gp', 'Croissance'], ['crop', 'Culture'], ['ha', 'Surface']].map(([k, t]) => `<a data-s="${k}" class="${S.sort.k === k ? 'on' : ''}">${t}${S.sort.k === k ? (S.sort.d > 0 ? ' ▲' : ' ▼') : ''}</a>`).join('')}</div>`;
+    body = sortSeg + `<div class="frows">${rows.map(r => { const st = r.st, T = stateText(r.I.st);
+      const extra = [r.I.ha ? (r.I.haApprox ? '≈ ' : '') + fmtHa(r.I.ha) : null, r.sp >= 0 ? 'Engrais ' + r.sp + '%' : null,
+        r.lp === 0 ? '<span class="warn">chaux</span>' : null, r.pp === 0 ? '<span class="warn">labour</span>' : null, r.own === 'À vendre' ? '<span class="warn">à vendre</span>' : null].filter(Boolean).join(' · ');
+      return `<div class="frow${r.id === S.sel ? ' sel' : ''}" data-id="${r.id}"><div class="n">${esc(r.id)}${S.notes[r.id] ? '<div class="nt" style="margin:0">📝</div>' : ''}</div><div style="flex:1;min-width:0">
+        <div class="t"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${st.fi ? `<span class="cdot" style="background:${cropColor(st)}"></span>${esc(st.fn || 'Culture')}` : `<span class="muted">${esc(T.txt)}</span>`}</span>
+        <span class="${st.ready || st.prep ? 'warn' : ''}">${st.fi ? (st.ready ? 'Prêt !' : st.prep ? 'Fanes' : st.cut ? 'Récolté' : st.wither ? 'Fané' : T.pct + ' %') : ''}</span></div>
+        ${st.fi ? `<div class="bar"><i style="width:${T.pct}%;${T.col ? 'background:' + T.col : ''}"></i></div>` : ''}
+        <div class="fsub" style="margin-top:4px">${extra || '&nbsp;'}</div></div></div>`; }).join('')}</div>`;
+  } else {
+    const useCols = pc ? COLS : COLS.filter(c => ['id', 'crop', 'gp', 'ha'].includes(c.k));
+    body = `<table><thead><tr>${useCols.map(c => `<th data-s="${c.k}" class="${S.sort.k === c.k ? 's' : ''}">${c.t}${S.sort.k === c.k ? (S.sort.d > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map(r => `<tr data-id="${r.id}" class="${r.id === S.sel ? 'sel' : ''}">${useCols.map(c => `<td class="${c.k === 'own' ? 'own' : ''}">${cell(r, c.k)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  }
+  const html = head + `<div class="scroll" style="flex:1">${body}</div>`;
+  if (box._h === html) return;
+  const sc = box.querySelector('.scroll'), top = sc ? sc.scrollTop : 0;
+  box.innerHTML = html; box._h = html;
+  box.querySelector('.scroll').scrollTop = top;
+  box.querySelectorAll('[data-f]').forEach(a => a.onclick = () => { S.filter = a.dataset.f; store.set('filter', S.filter); renderTable(); });
+  box.querySelectorAll('[data-s]').forEach(a => a.onclick = () => { const k = a.dataset.s; S.sort = {k, d:S.sort.k === k ? -S.sort.d : (k === 'gp' || k === 'ha' ? -1 : 1)}; store.set('sort', S.sort); renderTable(); });
+  box.querySelectorAll('[data-id]').forEach(el => el.onclick = () => { const id = Number(el.dataset.id); selectField(id); centerOn(id);
+    if (document.body.classList.contains('phone')) setTab('carte'); });
+  if (tablet) wireSide();
+}
+const sideSeg = () => { const n = unread(); return `<div class="seg"><a data-side="champs" class="${S.sideTab === 'champs' ? 'on' : ''}">Champs</a><a data-side="faire" class="${S.sideTab === 'faire' ? 'on' : ''}">À faire${n ? ' <span class="cnt0">' + n + '</span>' : ''}</a><a data-side="joueurs" class="${S.sideTab === 'joueurs' ? 'on' : ''}">Joueurs</a></div>`; };
+function wireSide(){ $('tblCard').querySelectorAll('[data-side]').forEach(a => a.onclick = () => { S.sideTab = a.dataset.side; renderTable(); }); }
+
+/* ================= qui fait quoi ================= */
+const WORKS = [[/FORAGEHARVEST/, 'Ensilage'], [/BEETHARVEST|BEETVEHICLE/, 'Arrachage betteraves'], [/POTATOHARVEST|POTATOVEHICLE/, 'Arrachage pommes de terre'],
+  [/HARVESTER|CUTTER|HEADER/, 'Moisson'], [/SEEDER|PLANTER|SOWING/, 'Semis'], [/PLOW/, 'Labour'], [/SUBSOIL|SPADER|DISCHARROW|POWERHARROW|CULTIVAT|TILLAGE/, 'Travail du sol'],
+  [/WEEDER|HOE/, 'Désherbage'], [/SPRAYER/, 'Pulvérisation'], [/LIME/, 'Chaulage'], [/FERTILIZERSPREAD|SPREADER(?!S?MANURE)/, 'Épandage engrais'],
+  [/MANURE/, 'Épandage fumier'], [/SLURRY/, 'Lisier'], [/MOWER/, 'Fauche'], [/TEDDER/, 'Fanage'], [/WINDROW/, 'Andainage'], [/BALER|BALE/, 'Pressage'],
+  [/MULCH/, 'Broyage'], [/ROLLER/, 'Roulage'], [/STONE/, 'Ramassage pierres'], [/LOADERWAGON|FORAGEWAGON/, 'Autochargeuse'], [/AUGER/, 'Transbordement'], [/TRAILER|TIPPER/, 'Transport']];
+const workName = c => { c = String(c || '').toUpperCase(); if (!c) return null; const w = WORKS.find(([re]) => re.test(c)); return w ? w[1] : null; };
+function toolsOfPlayer(p){
+  if (Array.isArray(p.tools) && p.tools.length) return p.tools;
+  const d = S.data || {};
+  if (p.self && d.active){                                    // ancien mod : seulement mes outils
+    const t = [{n:d.vehicle}];
+    (d.implements || []).forEach(x => { if (!x) return; const f = (x.fills || []).find(y => y && y.capacity > 0);
+      t.push({n:x.name, f:f ? Math.round(f.level / f.capacity * 100) : undefined, ft:f && f.title}); });
+    return t;
+  }
+  return p.vehicle ? [{n:p.vehicle}] : [];
+}
+function workOf(p){
+  const tools = toolsOfPlayer(p);
+  for (const t of tools.slice(1)){ const w = workName(t.c); if (w) return {t:w, on:!!(t.on || t.lo)}; }
+  if (tools[0]){ const w = workName(tools[0].c); if (w) return {t:w, on:!!tools[0].on}; }
+  return null;
+}
+function playersHTML(){
+  const ps = players();
+  if (!ps.length) return '<div class="empty">Aucun joueur pour le moment.</div>';
+  return ps.map((p, i) => {
+    const tools = toolsOfPlayer(p), w = workOf(p);
+    const st = p.field ? S.states[p.field.id] : null;
+    const where = p.field ? 'Champ ' + p.field.id + (st && st.fn ? ' · ' + st.fn : '') : (p.vehicle ? 'Hors champ' : 'À pied');
+    const rows = [];
+    if (tools[0]) rows.push(`<div class="row"><span class="k">Véhicule</span><b>${esc(tools[0].n)}</b>${typeof p.fuel === 'number' ? `<span class="fsub ${p.fuel < 15 ? 'bad' : ''}" style="margin-left:auto;flex-shrink:0">⛽ ${p.fuel} %</span>` : ''}</div>`);
+    tools.slice(1).forEach(t => rows.push(`<div class="row"><span class="k">Outil</span><b>${esc(t.n)}</b></div>`));
+    tools.filter(t => typeof t.f === 'number').forEach(t => rows.push(`<div class="row"><span class="k">${esc(t.ft || 'Remplissage')}</span><span class="fillbar"><i style="width:${t.f}%;${t.f >= 98 ? 'background:var(--red)' : ''}"></i></span><b>${t.f} %</b></div>`));
+    const afk = afkTxt(p);
+    return `<div class="pl2${afk ? ' afk' : ''}" data-p="${i}"><div class="hd"><div class="av" style="background:${p.col}">${esc(String(p.name || '?').charAt(0).toUpperCase())}</div>
+      <div style="flex:1;min-width:0"><div class="n" style="font-weight:800">${esc(p.name || 'Joueur')}${p.self ? ' <span class="fsub" style="font-weight:600">(moi)</span>' : ''}</div><div class="fsub">${esc(where)}</div></div>
+      ${afk ? `<span class="work afk">${afk}</span>` : w ? `<span class="work${w.on ? '' : ' idle'}">${esc(w.t)}</span>` : ''}</div>${rows.join('')}</div>`;
+  }).join('');
+}
+function wirePlayers(box){
+  const ps = players();
+  box.querySelectorAll('[data-p]').forEach(el => el.onclick = () => { const p = ps[Number(el.dataset.p)]; if (!p) return;
+    if (document.body.classList.contains('phone')) setTab('carte');
+    S.follow = false; $('zMe').classList.remove('on');
+    if (p.field) selectField(p.field.id);
+    centerWorld(p.x, p.z, Math.max(S.view ? S.view.s : 0, fitScale() * 4)); });
+}
+function renderPlayers(){
+  const box = $('plCard'), ps = players(), d = S.data || {};
+  const counts = {total:S.fields.length, ready:0, lime:0};
+  const own = hasOwnerData();
+  counts.total = own ? S.fields.filter(f => fieldInfo(f.id).mine).length : S.fields.length;
+  S.fields.forEach(f => { const st = S.states[f.id]; if (!st || (own && !fieldInfo(f.id).mine)) return; if (st.ready || st.prep) counts.ready++; if (st.lp === 0) counts.lime++; });
+  const html = `<span class="label">Qui fait quoi</span>${playersHTML()}
+    ${document.body.classList.contains('pc') && S.fields.length ? `<span class="label" style="margin-top:8px">Partie</span><div class="sum">
+      <div class="kv"><span class="label">${own ? 'Mes champs' : 'Champs'}</span><div class="v">${counts.total}</div></div>
+      <div class="kv"><span class="label">Prêts à récolter</span><div class="v ${counts.ready ? 'warn' : ''}">${counts.ready} champ${counts.ready > 1 ? 's' : ''}</div></div>
+      <div class="kv"><span class="label">À chauler</span><div class="v">${counts.lime} champ${counts.lime > 1 ? 's' : ''}</div></div></div>` : ''}`;
+
+  if (box._h === html) return;
+  box.innerHTML = html; box._h = html;
+  wirePlayers(box);
+}
+
+function renderAll(){ renderTop(); renderFiche(); renderTable(); renderPlayers(); renderLegend(); renderTodo(); renderBadge(); if (typeof renderVeh === 'function') renderVeh(); }
+
+function selectField(id){
+  S.sel = id;
+  if (S.placeSel != null || S.vehSel != null){ S.placeSel = null; S.vehSel = null; if (typeof renderVeh === 'function') renderVeh(); }
+  renderFiche(); renderTable(); paintFields(); drawMap();
+}
+/* un seul element choisi a la fois : champ, lieu ou engin (sa fiche s'affiche) */
+function pickPlace(id){ S.placeSel = id; S.vehSel = null; S.sel = null; renderVeh(); renderFiche(); renderTable(); paintFields(); drawMap(); }
+function pickVeh(id){ S.vehSel = id; S.placeSel = null; S.sel = null; renderVeh(); renderFiche(); renderTable(); paintFields(); drawMap(); }
+
+/* ================= a faire ================= */
+const TODO_GROUPS = [
+  ['harvest', '🌾', '#e8962a', 'Récolter'], ['prep', '🍂', '#d9412a', 'Retirer les fanes'], ['weed', '🌿', '#8fbf3a', 'Désherber'],
+  ['fert', '💧', '#3b7bdc', 'Fertiliser'], ['lime', '⚪', '#4fd6b4', 'Chauler'], ['plow', '🚜', '#a77b5a', 'Labourer'], ['sow', '🌱', '#5fae4a', 'Semer']];
+function todoItems(){
+  const own = hasOwnerData(), out = {};
+  TODO_GROUPS.forEach(g => { out[g[0]] = []; });
+  S.fields.forEach(f => {
+    const I = fieldInfo(f.id), st = I.st;
+    if (!st) return;
+    if (own ? !I.mine : (I.ofi != null ? !I.mine : true)) return;     // seulement mes champs
+    const it = {id:f.id, I, st};
+    if (st.ready) out.harvest.push(it);
+    if (st.prep) out.prep.push(it);
+    if (typeof st.ws === 'number' && st.ws > 0 && st.fi && !st.cut && !st.wither && !st.ready) out.weed.push(it);
+    if (st.fi && !st.ready && !st.cut && !st.wither && !st.prep && typeof st.sp === 'number' && st.sp < 100) out.fert.push(it);
+    if (st.lp === 0) out.lime.push(it);
+    if (st.pp === 0) out.plow.push(it);
+    if (!st.fi || st.cut || st.wither) out.sow.push(it);
+  });
+  return out;
+}
+function todoLine(g, it){
+  const st = it.st, I = it.I;
+  let t = st.fn || stateText(st).txt, sub = [I.ha != null ? (I.haApprox ? '≈ ' : '') + fmtHa(I.ha) : null];
+  if (g === 'fert') { t += ' · engrais ' + st.sp + ' %'; sub.push('en croissance ' + (st.gp || 0) + ' %'); }
+  if (g === 'sow') t = st.cut ? (st.fn || 'Culture') + ' récolté' : st.wither ? (st.fn || 'Culture') + ' fané' : (growthCat(st) || ['Champ vide'])[0];
+  if (g === 'weed') sub.push('niveau ' + st.ws);
+  return `<div class="todo" data-id="${it.id}"><div class="n">${esc(it.id)}</div><div style="min-width:0"><div class="t">${esc(t)}${S.notes[it.id] ? '<span class="nt">📝</span>' : ''}</div>
+    <div class="s">${esc(sub.filter(Boolean).join(' · '))}${S.notes[it.id] ? ' · ' + esc(S.notes[it.id].slice(0, 60)) : ''}</div></div><span class="go">Carte</span></div>`;
+}
+function alertsHTML(){
+  if (!S.alerts.length) return '';
+  return '<div class="label" style="margin:2px 2px 8px">Alertes</div>' + S.alerts.map(a => `<div class="alert a-${a.k}${a.read ? ' read' : ''}" data-a="${a.id}"${a.f != null ? ` data-id="${a.f}"` : ''}><span class="newdot"></span>
+    <div style="min-width:0"><div class="t">${esc(a.t)}</div><div class="s">${esc(a.s || '')}${a.s ? ' · ' : ''}${ago(a.at)}</div></div><button class="x" data-x="${a.id}" aria-label="Effacer">✕</button></div>`).join('');
+}
+const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "à l'instant" : m < 60 ? 'il y a ' + m + ' min' : 'il y a ' + Math.floor(m / 60) + ' h'; };
+function todoHTML(){
+  if (!S.fields.length) return alertsHTML() + '<div class="empty">La liste apparaîtra quand une partie sera lancée.</div>';
+  const items = todoItems(), own = hasOwnerData();
+  let h = alertsHTML() + '<div class="label" style="margin:14px 2px 0">Travaux sur mes champs</div>';
+  if (!own) h += '<div class="hint">Le serveur n\'a pas encore le mod 1.4 : seuls les champs où tu es passé et qui sont à toi apparaissent.</div>';
+  let any = false;
+  TODO_GROUPS.forEach(([k, ic, col, title]) => {
+    const list = items[k]; if (!list.length) return; any = true;
+    const ha = list.reduce((a, it) => a + (it.I.ha || 0), 0);
+    h += `<div class="sect"><span class="ic" style="background:${col}33;color:${col}">${ic}</span>${title}<span class="c">${list.length} champ${list.length > 1 ? 's' : ''}${ha ? ' · ' + fmtHa(ha) : ''}</span></div>` + list.map(it => todoLine(k, it)).join('');
+  });
+  if (!any) h += '<div class="empty">Rien à faire pour le moment 👍</div>';
+  return h;
+}
+function wireTodo(box){
+  box.querySelectorAll('[data-x]').forEach(b => b.onclick = e => { e.stopPropagation(); S.alerts = S.alerts.filter(a => String(a.id) !== b.dataset.x); saveAlerts(); renderAll(); });
+  box.querySelectorAll('.todo[data-id],.alert[data-id]').forEach(el => el.onclick = () => { const id = Number(el.dataset.id);
+    if (document.body.classList.contains('phone')) setTab('carte');
+    selectField(id); centerOn(id); });
+}
+function renderTodo(){
+  const box = $('todoCard');
+  const n = unread();
+  const head = document.body.classList.contains('phone') ? '' : `<div class="todoHead"><span class="label" style="flex:1">À faire</span>${n ? '<span class="cnt0">' + n + '</span>' : ''}
+    <span class="ibtn${S.snd ? ' on' : ''}" id="tdSnd" title="Son des alertes">🔔</span><span class="ibtn${S.vib ? ' on' : ''}" id="tdVib" title="Vibration">📳</span></div>`;
+  const html = head + `<div class="scroll" style="flex:1;padding-bottom:12px">${todoHTML()}</div>`;
+  if (box._h === html) return;
+  const sc = box.querySelector('.scroll'), top = sc ? sc.scrollTop : 0;
+  box.innerHTML = html; box._h = html; box.querySelector('.scroll').scrollTop = top;
+  wireTodo(box);
+  const a = $('tdSnd'); if (a) a.onclick = () => setOpt('snd', !S.snd);
+  const b = $('tdVib'); if (b) b.onclick = () => setOpt('vib', !S.vib);
+  const visible = document.body.classList.contains('pc') || (document.body.classList.contains('phone') && S.tab === 'faire');
+  if (visible) markRead();
+}
+
+/* ================= alertes ================= */
+const unread = () => S.alerts.filter(a => !a.read).length;
+const saveAlerts = () => store.set('alerts', S.alerts.slice(0, 40));
+let readTimer = null;
+function markRead(){
+  if (readTimer || !unread()) return;
+  readTimer = setTimeout(() => { readTimer = null; S.alerts.forEach(a => { a.read = true; }); saveAlerts(); renderAll(); }, 2500);
+}
+function renderBadge(){
+  const n = unread(), b = $('tabBadge');
+  b.textContent = n; b.classList.toggle('hide', !n);
+  document.title = (n ? '(' + n + ') ' : '') + 'Compagnon · FS25 Stream & Companion';
+}
+function pushAlert(k, t, sub, f, silent){
+  const now = Date.now();
+  S.alerts = S.alerts.filter(a => !(a.t === t && now - a.at < 10 * 60000));          // pas de doublon rapproche
+  S.alerts.unshift({id:now + Math.random(), k, t, s:sub, f, at:now, read:false, m:S.mapKey});
+  saveAlerts(); if (!silent) notify();
+}
+function checkAlerts(){
+  const own = hasOwnerData(), cur = {fields:{}, tools:{}};
+  S.fields.forEach(f => { const st = S.states[f.id]; if (st) cur.fields[f.id] = {ready:!!st.ready, wither:!!st.wither, mine:fieldInfo(f.id).mine}; });
+  players().forEach(p => toolsOfPlayer(p).forEach((t, i) => { if (typeof t.f === 'number') cur.tools[(p.name || '?') + '|' + i + '|' + t.n] = {f:t.f, p, t}; }));
+  const prev = S.prev; S.prev = cur;
+  if (!prev || (S.data && S.data.session === false)) return;                       // premiere lecture : reference, pas d'alerte
+  Object.entries(cur.fields).forEach(([id, c]) => {
+    const o = prev.fields[id]; if (!o || !(c.mine || (!own && fieldInfo(id).mine))) return;
+    const st = S.states[id] || {}, I = fieldInfo(id);
+    if (c.ready && !o.ready) pushAlert('ready', '🌾 Champ ' + id + ' prêt à récolter', [st.fn, I.ha ? fmtHa(I.ha) : null].filter(Boolean).join(' · '), Number(id));
+    if (c.wither && !o.wither) pushAlert('wither', '🥀 Champ ' + id + ' a fané', [st.fn, 'trop tard pour récolter'].filter(Boolean).join(' · '), Number(id));
+  });
+  Object.entries(cur.tools).forEach(([k, c]) => {
+    const o = prev.tools[k]; if (!o) return;
+    if (/SEED|PLANT|SPRAY|FERTI|SPREAD|LIME|MANURE|SLURRY|WEED/.test(String(c.t.c || '').toUpperCase())) return;   // ceux-la se vident en travaillant
+    // 1.4.4 : par defaut, seulement les joueurs de MA ferme (reglage « Alertes remorque pleine » dans 🎮 En jeu)
+    const myFarm = S.data && S.data.game ? S.data.game.farmId : null;
+    if (((S.ingame && S.ingame.alertFarm) || 'mine') === 'mine' && !c.p.self && myFarm != null && c.p.farmId != null && c.p.farmId !== myFarm) return;
+    if (c.f >= 98 && o.f < 98) pushAlert('full', '🚛 ' + (c.t.c && /HARVEST/i.test(c.t.c) ? 'Trémie pleine' : 'Remorque pleine') + ' — ' + (c.p.name || 'Joueur'),
+      [c.t.n, (c.t.ft ? c.t.ft + ' ' : '') + c.f + ' %'].filter(Boolean).join(' · '), c.p.field ? c.p.field.id : null);
+  });
+}
+/* alertes envoyees par le mod (production arretee, stock plein, animaux, meilleur mois pour vendre) */
+const GA_IC = {prod:'🏭', anim:'🐄', price:'💰'}, GA_SUB = {prod:'Production', anim:'Animaux', price:'Prix de vente'};
+S.gaSeen = new Set(store.get('gaSeen', []));
+function checkGameAlerts(d){
+  const L = Array.isArray(d.gameAlerts) ? d.gameAlerts : [];
+  let changed = false; const first = !S.gaInit; S.gaInit = true;          // a l'ouverture de la page : affichees sans son
+  L.forEach(a => {
+    if (!a || a.id == null || S.gaSeen.has(String(a.id))) return;
+    S.gaSeen.add(String(a.id)); changed = true;
+    const k = GA_IC[a.kind] ? a.kind : 'prod';
+    pushAlert(k, GA_IC[k] + ' ' + String(a.text || ''), GA_SUB[k], null, first);
+  });
+  if (changed) store.set('gaSeen', [...S.gaSeen].slice(-200));
+}
+/* son et vibration (desactivables, gardes sur l'appareil) */
+let audio = null;
+function unlockAudio(){ try { if (!audio){ const A = window.AudioContext || window.webkitAudioContext; if (A) audio = new A(); } if (audio && audio.state === 'suspended') audio.resume(); } catch (e) {} }
+document.addEventListener('pointerdown', unlockAudio, {passive:true});
+function beep(){
+  if (!audio) return;
+  try { const t = audio.currentTime;
+    [[880, 0], [1175, 0.16]].forEach(([fq, dt]) => { const o = audio.createOscillator(), g = audio.createGain();
+      o.type = 'sine'; o.frequency.value = fq; g.gain.setValueAtTime(0.0001, t + dt); g.gain.exponentialRampToValueAtTime(0.25, t + dt + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dt + 0.14); o.connect(g); g.connect(audio.destination); o.start(t + dt); o.stop(t + dt + 0.16); });
+  } catch (e) {}
+}
+function notify(){
+  if (S.snd) beep();
+  if (S.vib && navigator.vibrate && matchMedia('(pointer:coarse)').matches) { try { navigator.vibrate([180, 90, 180]); } catch (e) {} }
+}
+function setOpt(k, v){ S[k] = v; store.set(k, v); renderOpts(); renderTodo(); if (v){ unlockAudio(); if (k === 'snd') beep(); if (k === 'vib' && navigator.vibrate) navigator.vibrate(120); } }
+function renderOpts(){ $('sndBtn').querySelector('.sw').classList.toggle('on', S.snd); $('vibBtn').querySelector('.sw').classList.toggle('on', S.vib); }
+$('sndBtn').onclick = e => { e.stopPropagation(); setOpt('snd', !S.snd); };
+$('vibBtn').onclick = e => { e.stopPropagation(); setOpt('vib', !S.vib); };
+renderOpts();
+
+/* ================= plein ecran ================= */
+// Chrome / Android, iPad, PC : API plein ecran. iPhone : pas d'API -> ajouter la page a l'ecran d'accueil (mode app sans barres).
+const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+const fsCan = () => !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+const fsApp = () => !fsEl() && matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone === true;   // ouverte depuis l'icone de l'ecran d'accueil
+function renderFs(){
+  const b = $('fsBtn'), n = $('fsNote');
+  if (fsApp()){ b.classList.add('hide'); n.classList.add('hide'); return; }
+  b.classList.remove('hide');
+  b.textContent = fsEl() ? '⛶ Quitter le plein écran' : '⛶ Plein écran';
+}
+$('fsBtn').onclick = e => {
+  e.stopPropagation();
+  const n = $('fsNote');
+  if (fsEl()){ (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+  if (fsCan()){
+    const d = document.documentElement, r = (d.requestFullscreen || d.webkitRequestFullscreen).call(d);
+    if (r && r.catch) r.catch(() => {}); closeMenu(); return;
+  }
+  const ios = /iPhone|iPod/.test(navigator.userAgent);
+  n.textContent = ios ? "Sur iPhone : bouton Partager (carré avec une flèche) puis « Sur l'écran d'accueil ». Ouvre ensuite Compagnon depuis son icône : plein écran, sans barres."
+                      : "Ce navigateur ne permet pas le plein écran. Astuce : menu du navigateur > « Ajouter à l'écran d'accueil », puis ouvre Compagnon depuis son icône.";
+  n.classList.toggle('hide');
+};
+['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => { renderFs(); requestAnimationFrame(() => { clampView(); drawMap(); }); }));
+renderFs();
+
+/* ================= garder l'ecran allume ================= */
+// 1) PC / page securisee : vrai verrou d'ecran (Wake Lock). 2) iPad / Android en Wi-Fi (http) : petite video noire muette, invisible, jouee en boucle
+// (un ecran qui lit une video ne se met pas en veille). 3) Sinon : explication du reglage de l'appareil. « ✓ Actif » seulement si ca marche vraiment.
+const WAKE_MP4 = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAANJbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAB9AAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAnN0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAB9AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAABAAAAAQAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAfQAAAAAAABAAAAAAHrbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAAAoAAAAUABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABlm1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAVZzdGJsAAAAtnN0c2QAAAAAAAAAAQAAAKZhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAABAAEABIAAAASAAAAAAAAAABFUxhdmM2MC4zMS4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAALGF2Y0MBQsAK/+EAFWdCwAraewEQAAADABAAAAMAoPEiagEABGjOD8gAAAAQcGFzcAAAAAEAAAABAAAAFGJ0cnQAAAAAAAALWAAAC1gAAAAYc3R0cwAAAAAAAAABAAAACgAACAAAAAAUc3RzcwAAAAAAAAABAAAAAQAAABxzdHNjAAAAAAAAAAEAAAABAAAACgAAAAEAAAA8c3RzegAAAAAAAAAAAAAACgAAAoUAAAAJAAAACQAAAAkAAAAJAAAACQAAAAkAAAAJAAAACQAAAAkAAAAUc3RjbwAAAAAAAAABAAADeQAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNjAuMTYuMTAwAAAACGZyZWUAAALebWRhdAAAAm8GBf//a9xF6b3m2Ui3lizYINkj7u94MjY0IC0gY29yZSAxNjQgcjMxMDggMzFlMTlmOSAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMjMgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0wIHJlZj0xIGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDE6MHgxMTEgbWU9aGV4IHN1Ym1lPTIgcHN5PTEgcHN5X3JkPTEuMDA6MC4wMCBtaXhlZF9yZWY9MCBtZV9yYW5nZT0xNiBjaHJvbWFfbWU9MSB0cmVsbGlzPTAgOHg4ZGN0PTAgY3FtPTAgZGVhZHpvbmU9MjEsMTEgZmFzdF9wc2tpcD0xIGNocm9tYV9xcF9vZmZzZXQ9MCB0aHJlYWRzPTEgbG9va2FoZWFkX3RocmVhZHM9MSBzbGljZWRfdGhyZWFkcz0wIG5yPTAgZGVjaW1hdGU9MSBpbnRlcmxhY2VkPTAgYmx1cmF5X2NvbXBhdD0wIGNvbnN0cmFpbmVkX2ludHJhPTAgYmZyYW1lcz0wIHdlaWdodHA9MCBrZXlpbnQ9MjUwIGtleWludF9taW49NSBzY2VuZWN1dD00MCBpbnRyYV9yZWZyZXNoPTAgcmNfbG9va2FoZWFkPTEwIHJjPWNyZiBtYnRyZWU9MSBjcmY9MjMuMCBxY29tcD0wLjYwIHFwbWluPTAgcXBtYXg9NjkgcXBzdGVwPTQgaXBfcmF0aW89MS40MCBhcT0xOjEuMDAAgAAAAA5liIQEf///D0UAASq/gAAAAAVBmiAR9QAAAAVBmkAR9QAAAAVBmmAR9QAAAAVBmoAR9QAAAAVBmqAR9QAAAAVBmsAR9QAAAAVBmuAR9QAAAAVBmwAQ9QAAAAVBmyA/1A==', WAKE_WEBM = 'data:video/webm;base64,GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQJChYECGFOAZwEAAAAAAAKyEU2bdLpNu4tTq4QVSalmU6yBoU27i1OrhBZUrmtTrIHYTbuMU6uEElTDZ1OsggEeTbuMU6uEHFO7a1OsggKc7AEAAAAAAABZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmsirXsYMPQkBNgI1MYXZmNjAuMTYuMTAwV0GNTGF2ZjYwLjE2LjEwMESJiECfQAAAAAAAFlSua8GuAQAAAAAAADjXgQFzxYgWm9GFLcAaxJyBACK1nIN1bmSIgQCGhVZfVlA4g4EBI+ODhAvrwgDgibCBELqBEJqBAhJUw2f8c3OgY8CAZ8iaRaOHRU5DT0RFUkSHjUxhdmY2MC4xNi4xMDBzc9ZjwItjxYgWm9GFLcAaxGfIoUWjh0VOQ09ERVJEh5RMYXZjNjAuMzEuMTAyIGxpYnZweGfIoUWjiERVUkFUSU9ORIeTMDA6MDA6MDIuMDAwMDAwMDAwAB9DtnVA9+eBAKOjgQAAgBACAJ0BKhAAEAAARwiFhYiFhIgCAgAMDWAA/v+rUICjlYEAyACxAQABEBAAGAAYWC/0AAgAAKOVgQGQALEBAAEQEAAYABhYL/QACAAAo5WBAlgAsQEAARAQABgAGFgv9AAIAACjlYEDIACxAQABEBAAGAAYWC/0AAgAAKOVgQPoALEBAAEQEAAYABhYL/QACAAAo5WBBLAAsQEAARAQABgAGFgv9AAIAACjlYEFeACxAQABEBAUYABhYL/QACAAAKOVgQZAALEBAAEQEAAYABhYL/QACAAAo5WBBwgAsQEAARAQABgAGFgv9AAIAAAcU7trkbuPs4EAt4r3gQHxggGf8IED';
+S.wake = store.get('wake', false); let wakeLock = null, wakeVid = null, wakeState = 'off';
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function wakeHelp(){
+  if (isIOS()) return "Si l'écran s'éteint quand même : Réglages > Luminosité et affichage > Verrouillage automatique > Jamais.";
+  if (/Android/i.test(navigator.userAgent)) return "Si l'écran s'éteint quand même : Paramètres > Affichage > Mise en veille de l'écran (choisis la durée la plus longue).";
+  if (/Windows/i.test(navigator.userAgent)) return "Si l'écran s'éteint quand même : Paramètres > Système > Alimentation > Écran éteint après > Jamais.";
+  return "Si l'écran s'éteint quand même : règle la mise en veille de l'écran dans les réglages de l'appareil.";
+}
+function renderWake(){
+  $('wakeBtn').querySelector('.sw').classList.toggle('on', S.wake);
+  const n = $('wakeNote');
+  if (!S.wake){ n.classList.add('hide'); return; }
+  n.classList.remove('hide');
+  n.innerHTML = wakeState === 'lock' ? "✓ Actif : l'écran ne s'éteindra pas tant que Companion est ouvert et affiché."
+    : wakeState === 'video' ? '✓ Actif (méthode vidéo) : garde Companion ouvert et affiché. ' + esc(wakeHelp())
+    : wakeState === 'wait' ? 'Touche l’écran une fois pour l’activer.'
+    : wakeState === 'pending' ? 'Activation…'
+    : '✕ Pas possible sur ce navigateur. ' + esc(wakeHelp());
+}
+function wakeVideo(){
+  if (!wakeVid){
+    wakeVid = document.createElement('video'); wakeVid.id = 'wakeVid';
+    wakeVid.muted = true; wakeVid.loop = true; wakeVid.playsInline = true;
+    wakeVid.setAttribute('muted', ''); wakeVid.setAttribute('playsinline', ''); wakeVid.setAttribute('webkit-playsinline', ''); wakeVid.setAttribute('aria-hidden', 'true');
+    [['video/webm', WAKE_WEBM], ['video/mp4', WAKE_MP4]].forEach(([t, src]) => { const so = document.createElement('source'); so.type = t; so.src = src; wakeVid.appendChild(so); });
+    // en boucle sur une video de 2 s : on la relance un peu avant la fin (certains appareils se mettent en veille au « loop »)
+    wakeVid.addEventListener('timeupdate', () => { if (wakeVid.duration && wakeVid.currentTime > wakeVid.duration - 0.5) wakeVid.currentTime = 0; });
+    wakeVid.addEventListener('pause', () => { if (S.wake && wakeState === 'video' && !document.hidden){ wakeState = 'wait'; renderWake(); } });
+    document.body.appendChild(wakeVid);
+  }
+  const r = wakeVid.play();
+  return (r && r.then ? r : Promise.resolve()).then(() => { if (wakeVid.paused) throw new Error('paused'); });
+}
+function wakeOn(){
+  if (!S.wake) return;
+  wakeState = 'pending'; renderWake();
+  const viaVideo = () => wakeVideo().then(() => { wakeState = 'video'; }, () => { wakeState = navigator.userActivation && !navigator.userActivation.isActive ? 'wait' : 'fail'; }).then(renderWake);
+  if ('wakeLock' in navigator && window.isSecureContext){
+    navigator.wakeLock.request('screen').then(l => {
+      wakeLock = l; wakeState = 'lock'; renderWake();
+      l.addEventListener('release', () => { wakeLock = null; if (S.wake && wakeState === 'lock'){ wakeState = 'wait'; renderWake(); } });
+    }).catch(viaVideo);
+  } else viaVideo();
+}
+function wakeOff(){
+  if (wakeLock){ try { wakeLock.release(); } catch (e) {} wakeLock = null; }
+  if (wakeVid){ try { wakeVid.pause(); } catch (e) {} }
+  wakeState = 'off'; renderWake();
+}
+$('wakeBtn').onclick = e => { e.stopPropagation(); S.wake = !S.wake; store.set('wake', S.wake); if (S.wake) wakeOn(); else wakeOff(); renderWake(); };
+// au retour sur la page, ou au premier toucher apres un rechargement : on relance
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.wake && wakeState !== 'lock' && wakeState !== 'pending') wakeOn(); });
+document.addEventListener('pointerdown', () => { if (S.wake && (wakeState === 'wait' || wakeState === 'off')) wakeOn(); }, {passive:true});
+if (S.wake) wakeOn(); renderWake();
+
+/* ================= mes engins + "y aller" (teleportation faite par le mod, jusqu'a 3 s) ================= */
+S.vehSel = null; S.goCmd = null;
+function tpOn(){ return !S.ingame || S.ingame.tp !== false; }
+function farmVehicles(){ const d = S.data || {}; return Array.isArray(d.farmVehicles) ? d.farmVehicles : null; }
+function places(){ const d = S.data || {}; return Array.isArray(d.places) ? d.places : []; }
+const mapPlaces = () => places().filter(p => p.k !== 'silo');          // silos : dans la liste seulement
+const PLACE_IC = {home:'🏠', animals:'🐄', silo:'🌾', prod:'🏭', sell:'💰', building:'🏚️'};
+const placeName = p => p.id === 'home' ? 'Maison (ferme)' : (p.n || (p.k === 'sell' ? 'Point de vente' : 'Bâtiment'));
+S.secOpen = Object.assign({eng: true, farm: true, silo: false, sell: false}, store.get('vhOpen', {}));
+const fmtL = v => Math.round(v).toLocaleString('fr-FR').replace(/[  ]/g, ' ') + ' L';
+function placeItem(p){
+  const sel = S.placeSel === p.id;
+  const btn = sel && tpOn() ? `<button class="goBtn" data-gop="${esc(p.id)}">📍 Y aller</button>` : '';
+  let fill = '';
+  if (p.k === 'silo'){
+    const F = Array.isArray(p.fill) ? p.fill : [];
+    fill = F.length ? F.slice(0, 5).map(f => `<div class="fl"><span>${esc(f.t)}</span><b>${fmtL(f.l)}</b></div>`).join('') + (F.length > 5 ? `<div class="fl"><span>+ ${F.length - 5} autre(s)</span></div>` : '')
+                    : '<div class="fl"><span>Vide</span></div>';
+  }
+  return `<div class="vh plc${sel ? ' sel' : ''}" data-pl="${esc(p.id)}"><div class="t"><span class="ic">${PLACE_IC[p.k] || '📍'}</span><span class="n">${esc(placeName(p))}</span></div>${fill}${btn}</div>`;
+}
+function vehItem(v){
+  const sel = S.vehSel === v.id, occ = !!v.occ && !v.me, fuel = typeof v.fuel === 'number' ? v.fuel : null;
+  const who = v.me ? '<span class="who me">toi</span>' : occ ? `<span class="who">👤 ${esc(v.occ)}</span>` : '';
+  const sub = [fuel != null ? `<span class="mb"><i style="width:${Math.max(0, Math.min(100, fuel))}%;${fuel < 15 ? 'background:var(--red)' : fuel < 35 ? 'background:var(--amber)' : ''}"></i></span>${fuel} %` : '',
+               typeof v.cond === 'number' ? `état ${Math.round(v.cond)} %` : '', v.b ? `<span class="br">${esc(v.b)}</span>` : ''].filter(Boolean).join(' ');
+  const vf = typeof v.x === 'number' ? fieldAt(v.x, v.z) : null;
+  const btn = sel && tpOn() && !v.me ? `<button class="goBtn" data-go="${esc(v.id)}" ${occ ? 'disabled' : ''}>${occ ? 'Occupé' : '🚜 Monter dedans'}</button>` : '';
+  return `<div class="vh${sel ? ' sel' : ''}${occ ? ' occ' : ''}" data-v="${esc(v.id)}"><div class="t"><span class="d"></span><span class="n">${esc(v.n || 'Engin')}</span>${v.pl ? '<span class="plate" title="Plaque">' + esc(v.pl) + '</span>' : ''}${who}</div><div class="s">${sub}</div>${vf ? '<div class="s">📍 Champ ' + esc(vf.id) + '</div>' : ''}${btn}</div>`;
+}
+function secHTML(key, title, count, body){
+  const open = !!S.secOpen[key];
+  return `<div class="vhSec${open ? ' open' : ''}" data-sec="${key}"><span class="ar">▸</span>${title}<span class="c">${count}</span></div>` + (open ? body : '');
+}
+function goPlace(id){ const p = places().find(x => x.id === id); if (p) goTo('poi', p.id, placeName(p)); }
+function vehHTML(){
+  const list = farmVehicles();
+  if (!list) return '<div class="vhEmpty">' + (S.data && S.data.session !== false ? 'Liste des engins : mets à jour le mod (1.4.1.8 ou plus).' : 'Lance une partie pour voir tes engins.') + '</div>';
+  const fine = matchMedia('(pointer:fine)').matches, P = places();
+  const farm = P.filter(p => !p.pub && p.k !== 'silo' && p.k !== 'sell'), silos = P.filter(p => p.k === 'silo'), sell = P.filter(p => p.k === 'sell');
+  let h = secHTML('eng', '🚜 Mes engins', list.length, list.length ? list.map(vehItem).join('') : '<div class="vhEmpty">Aucun engin dans ta ferme.</div>');
+  if (farm.length) h += secHTML('farm', '🏠 Ma ferme', farm.length, farm.map(placeItem).join(''));
+  if (silos.length) h += secHTML('silo', '🌾 Mes silos', silos.length, silos.map(placeItem).join(''));
+  if (sell.length) h += secHTML('sell', '💰 Points de vente', sell.length, sell.map(placeItem).join(''));
+  return '<div class="vhList">' + h + '</div>' + (tpOn() ? `<div class="vhHint">${fine ? 'Double-clic sur un engin, un lieu ou un champ = y aller' : 'Touche un engin ou un lieu puis le bouton vert'}</div>` : '');
+}
+function renderVeh(){
+  const html = vehHTML();
+  $('mapCard').classList.toggle('withVeh', !document.body.classList.contains('phone'));
+  ['vehPanel', 'vehCard'].forEach(id => {
+    const box = $(id); box.classList.remove('none');
+    if (box._h === html) return;
+    const L = box.querySelector('.vhList'), top = L ? L.scrollTop : 0;
+    box.innerHTML = html; box._h = html;
+    const L2 = box.querySelector('.vhList'); if (L2) L2.scrollTop = top;
+    box.querySelectorAll('[data-v]').forEach(el => {
+      el.onclick = e => { if (e.target.closest('[data-go]')) return; const id = el.dataset.v; pickVeh(id);
+        const v = (farmVehicles() || []).find(x => x.id === id); if (v && typeof v.x === 'number' && !document.body.classList.contains('phone')) centerWorld(v.x, v.z); drawMap(); };
+      el.ondblclick = e => { e.preventDefault(); const v = (farmVehicles() || []).find(x => x.id === el.dataset.v); if (v && !v.me && !v.occ) goTo('vehicle', v.id, v.n); };
+    });
+    box.querySelectorAll('[data-pl]').forEach(el => {
+      el.onclick = e => { if (e.target.closest('[data-gop]')) return; const id = el.dataset.pl; pickPlace(id);
+        const p = places().find(x => x.id === id); if (p && !document.body.classList.contains('phone')) centerWorld(p.x, p.z); drawMap(); };
+      el.ondblclick = e => { e.preventDefault(); goPlace(el.dataset.pl); };
+    });
+    box.querySelectorAll('[data-sec]').forEach(el => el.onclick = () => { const k = el.dataset.sec; S.secOpen[k] = !S.secOpen[k]; store.set('vhOpen', S.secOpen); renderVeh(); });
+    box.querySelectorAll('[data-gop]').forEach(b => b.onclick = e => { e.stopPropagation(); goPlace(b.dataset.gop); });
+    box.querySelectorAll('[data-go]').forEach(b => b.onclick = e => { e.stopPropagation(); const v = (farmVehicles() || []).find(x => x.id === b.dataset.go); if (v) goTo('vehicle', v.id, v.n); });
+  });
+}
+let goToastTimer = null;
+function goToast(txt, err, ms){
+  const t = $('goToast'); t.textContent = txt; t.classList.toggle('err', !!err); t.style.display = 'block';
+  clearTimeout(goToastTimer); if (ms) goToastTimer = setTimeout(() => { t.style.display = 'none'; }, ms);
+}
+const GO_ERR = {
+  'tp-off': 'Téléportation désactivée (bouton 🎮 En jeu)', 'no-game': 'Lance une partie avec le mod', 'no-player': 'Pas de joueur dans la partie',
+  'field-not-found': 'Champ introuvable', 'field-no-position': 'Position du champ inconnue', 'vehicle-not-found': 'Engin introuvable',
+  'not-my-vehicle': "Cet engin n'est pas à ta ferme", 'not-enterable': 'On ne peut pas monter dans cet engin', 'leave-error': "Impossible de descendre de l'engin",
+  'still-in-vehicle': "Toujours dans l'engin : réessaie", 'teleport-unavailable': 'Téléportation non disponible dans ce jeu (envoie-moi le log)',
+  'enter-unavailable': 'Montée non disponible dans ce jeu (envoie-moi le log)', 'place-not-found': 'Lieu introuvable',
+  'player-not-found': "Ce joueur n'est plus dans la partie", 'player-no-position': 'Position du joueur inconnue'
+};
+function goErrText(msg){
+  msg = String(msg || '');
+  if (msg.indexOf('occupied:') === 0) return esc(msg.slice(9)) + ' est déjà dedans';
+  return GO_ERR[msg] || ('Refusé par le jeu : ' + msg);
+}
+function goTo(kind, target, label){
+  if (!tpOn()){ goToast(GO_ERR['tp-off'], true, 4000); return; }
+  const what = kind === 'field' ? 'le champ ' + target : (label || "l'engin");
+  goToast('⏳ ' + (kind === 'vehicle' ? 'On monte dans ' : kind === 'player' ? 'Téléportation près de ' : 'Téléportation vers ') + what + '…');
+  fetch('/compagnon/goto', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify({kind, target:String(target)})})
+    .then(r => r.json().catch(() => ({})).then(j => ({ok: r.ok, j})))
+    .then(({ok, j}) => {
+      if (!ok || !j.ok){ goToast('✕ ' + goErrText(j.error || 'erreur'), true, 5000); return; }
+      S.goCmd = {id: String(j.id), at: Date.now(), what, kind};
+      setTimeout(() => { if (S.goCmd && S.goCmd.id === String(j.id)){ S.goCmd = null; goToast('✕ Pas de réponse du jeu (partie lancée ? mod à jour ?)', true, 6000); } }, 10000);
+    }).catch(() => goToast("✕ L'application ne répond pas", true, 5000));
+}
+function checkGoAck(d){
+  const a = d && d.cmdAck; if (!S.goCmd || !a || String(a.id) !== S.goCmd.id) return;
+  const c = S.goCmd; S.goCmd = null;
+  if (a.ok) goToast('✓ ' + (c.kind === 'field' ? 'Te voilà sur le champ ' + c.what.replace('le champ ', '') : c.kind === 'poi' ? 'Te voilà : ' + c.what : c.kind === 'player' ? 'Te voilà près de ' + c.what : 'Tu es dans ' + c.what), false, 3000);
+  else goToast('✕ ' + goErrText(a.msg), true, 5000);
+}
+
+/* ================= affichage dans le jeu : reglages gardes par l'app, lus par le mod ================= */
+S.ingame = null;
+/* blocs du jeu : meme liste et memes positions par defaut que le mod (HUD_BLOCKS).
+   w = largeur a la taille 1, h = hauteur approximative pour l'apercu, x : nombre, 'mid' (centre) ou null (bord droit) */
+const GB = {
+  todo:     {n:'À faire',           w:.19, rows:6.34, x:.012,  y:.20, on:true,  key:true},
+  who:      {n:'Qui fait quoi',     w:.19, rows:5.5,  x:null,  y:.20, on:true,  key:true},
+  field:    {n:'Entrée dans un champ', w:.26, rows:0, x:'mid', y:.22, on:true,  key:false},
+  weather:  {n:'Prévisions météo',  w:.24, rows:3.9,  x:'mid', y:.02, on:false, key:true},
+  fieldnow: {n:'Champ actuel',      w:.19, rows:7.9,  x:null,  y:.40, on:false, key:true},
+  alerts:   {n:'Dernières alertes', w:.19, rows:2.5,  x:null,  y:.60, on:false, key:true},
+};
+const GB_BODY = {
+  todo: '<b>À FAIRE · MES CHAMPS</b><i style="color:#f2b544">Récolter</i><i>56 Betterave · 26 ha</i><i>Chauler</i><i>56 Betterave</i>',
+  who: '<b>QUI FAIT QUOI</b><i><span style="color:#8fe45f">Luxo (moi)</span> — Semis · Ch. 7</i><i><span style="color:#f2a65a">Wawa</span> — Moisson · 99 %</i><i style="opacity:.6;font-size:.85em">(masqué quand tu joues seul)</i>',
+  field: '<b style="color:#fff;font-size:1em">Champ 56 · Betterave</b><i>Ferme leluxo · 26 ha · engrais 50 %</i>',
+  weather: '<b>PRÉVISIONS MÉTÉO</b><div class="gsFc"><span>+3h<br>☁️</span><span>+6h<br>🌧️</span><span>+12h<br>☀️</span><span>Demain<br>☀️</span><span>J+2<br>☁️</span></div>',
+  fieldnow: '<b>CHAMP ACTUEL</b><i><strong>Champ 7 · Orge</strong></i><i>Croissance 35 %</i><div class="bar"><span style="width:35%"></span></div><i>Engrais 50 % · Chaux <span style="color:#f2b544">à chauler</span></i><i>» penser à chauler</i>',
+  alerts: '<b>DERNIÈRES ALERTES</b><i>Champ 12 prêt à récolter</i><i style="opacity:.7">il y a 3 min</i>',
+};
+S.gsSel = 'todo';
+const gsEnt = k => (S.ingame && S.ingame.pos && S.ingame.pos[k]) || {};
+const gsOn = k => { const v = S.ingame && S.ingame[k]; return v === undefined ? (GB[k] ? GB[k].on : true) : v !== false; };
+/* format de l'ecran du jeu (envoye par le mod 1.4.1.9+), sinon 16:9. Les largeurs sont donnees pour un ecran 16:9
+   (comme dans le mod : wRef) puis converties vers le vrai format, pour que l'apercu soit identique au jeu. */
+function gsAspect(){ const d = S.data || {}; return (d.screenW > 0 && d.screenH > 0) ? Math.min(Math.max(d.screenW / d.screenH, 1), 4) : 16 / 9; }
+function gsGeom(k){
+  const d = GB[k], e = gsEnt(k), sc = (S.ingame && typeof S.ingame.scale === 'number' ? S.ingame.scale : 1) * (typeof e.s === 'number' ? e.s : 1);
+  const kA = (16 / 9) / gsAspect();
+  // hauteur calculee comme dans le mod : marges + titre + lignes (en fraction de la hauteur de l'ecran)
+  const rows = k === 'weather' && S.data && S.data.game && S.data.game.forecastTempOk ? 5.1 : d.rows;
+  const autoH = k === 'field' ? (.021 + .014 * 2.75) * sc : (.021 + .014 * 1.55 + .014 * rows) * sc;
+  const w = Math.min((typeof e.w === 'number' && e.w > 0 ? e.w : d.w * sc) * kA, .98), h = typeof e.h === 'number' && e.h > 0 ? e.h : autoH;
+  let x = typeof e.x === 'number' ? e.x : (d.x === null ? .988 - w : d.x === 'mid' ? .5 - w / 2 : d.x);
+  let y = typeof e.y === 'number' ? e.y : d.y;
+  return {x: Math.max(0, Math.min(x, 1 - w)), y: Math.max(0, Math.min(y, 1 - h)), w, h, sc, kA, free: !!(e.w || e.h),
+          a: typeof e.a === 'number' ? e.a : .82, m: e.m === 'always' ? 'always' : 'key'};
+}
+function gsBuild(){
+  const box = $('gsScreen'); if (box.dataset.ok) return; box.dataset.ok = 1;
+  box.innerHTML = Object.keys(GB).map(k => `<div class="gsP" data-p="${k}">${GB_BODY[k]}<span class="tagK"></span><span class="rsz" title="Glisse pour changer la largeur et la hauteur"></span></div>`).join('');
+  box.querySelectorAll('.gsP').forEach(gsDrag);
+}
+function renderIngame(){
+  gsBuild();
+  document.querySelectorAll('#gameSheet [data-ig]').forEach(a => {
+    a.querySelector('.sw').classList.toggle('on', !!S.ingame && gsOn(a.dataset.ig));
+    a.classList.toggle('sel', a.dataset.ig === S.gsSel);
+    a.style.opacity = S.ingame ? '' : '.5';
+  });
+  const scr = $('gsScreen'), A = gsAspect(), d0 = S.data || {};
+  scr.style.aspectRatio = String(A);
+  scr.style.width = `min(100%, ${(62 * A).toFixed(1)}vh)`;
+  $('gsRes').textContent = d0.screenW > 0 ? `Écran du jeu : ${d0.screenW} × ${d0.screenH}` : 'Écran du jeu : inconnu (16:9 par défaut, lance une partie)';
+  const scrH = scr.clientHeight;
+  document.querySelectorAll('#gsScreen .gsP').forEach(el => {
+    const k = el.dataset.p, g = gsGeom(k);
+    Object.assign(el.style, {left: g.x * 100 + '%', top: g.y * 100 + '%', width: g.w * 100 + '%',
+      fontSize: scrH ? (scrH * 0.0125 * g.sc).toFixed(2) + 'px' : 'calc(clamp(6px,1.0vw,10.5px) * ' + g.sc + ')', background: 'rgba(22,33,27,' + g.a + ')',
+      padding: scrH ? `${(scrH * .0105 * g.sc).toFixed(1)}px ${(scrH * .0105 * g.sc).toFixed(1)}px` : '', lineHeight: '1.5', minHeight: '', height: g.h * 100 + '%'});
+    el.classList.toggle('hid', !gsOn(k));
+    el.classList.toggle('sel', S.gsSel === k);
+    el.querySelector('.tagK').textContent = GB[k].key ? (g.m === 'always' ? '●' : 'F9') : '';
+  });
+  renderGsEdit(); renderGsDur();
+  if (typeof renderVeh === 'function' && S.data) renderVeh();
+}
+function renderGsEdit(){
+  const k = S.gsSel, d = GB[k], g = gsGeom(k), box = $('gsEdit');
+  if (!S.ingame){ box.innerHTML = '<span class="muted">Chargement…</span>'; return; }
+  const fs = typeof S.ingame.fieldSec === 'number' ? S.ingame.fieldSec : 7;
+  box.innerHTML = `<div class="ln"><span class="ttl2">Bloc : ${d.n}</span>${gsOn(k) ? '' : '<span class="muted" style="font-size:12px">(masqué : active-le plus haut)</span>'}</div>
+    ${d.key ? `<div class="ln"><span class="k">Affichage</span><div class="seg2" id="gsMode"><a data-m="key" class="${g.m === 'key' ? 'on' : ''}">Avec la touche (F9)</a><a data-m="always" class="${g.m === 'always' ? 'on' : ''}">Toujours</a></div></div>` : ''}
+    <div class="ln"><span class="k">Taille</span><input type="range" id="gsS" min="0.5" max="2" step="0.05" value="${(gsEnt(k).s || 1)}"><span class="v" id="gsSv">${Math.round((gsEnt(k).s || 1) * 100)} %</span></div>
+    <div class="ln"><span class="k">Largeur / hauteur</span><span style="flex:1;font-size:13px" class="muted">${g.free ? 'Réglées à la main (coin en bas à droite du bloc)' : 'Automatiques — glisse le coin en bas à droite du bloc pour les changer'}</span>${g.free ? '<button class="gsBtn" id="gsWH" style="padding:6px 12px">↺ Auto</button>' : ''}</div>
+    <div class="ln"><span class="k">Fond (opacité)</span><input type="range" id="gsA" min="0" max="1" step="0.05" value="${g.a}"><span class="v" id="gsAv">${Math.round(g.a * 100)} %</span></div>
+    ${k === 'field' ? `<div class="ln"><span class="k">Durée d'affichage</span><input type="range" id="gsF" min="2" max="30" step="1" value="${fs}"><span class="v" id="gsFv">${fs} s</span></div>` : ''}`;
+  const setE = (patch, delay) => {
+    S.ingame.pos = Object.assign({}, S.ingame.pos || {}); S.ingame.pos[k] = Object.assign({}, gsEnt(k), patch);
+    renderIngameLite(); gsSave({pos: {[k]: patch}}, delay);
+  };
+  $('gsS').oninput = e => { const v = Number(e.target.value); $('gsSv').textContent = Math.round(v * 100) + ' %'; setE({s: v}, 350); };
+  $('gsA').oninput = e => { const v = Number(e.target.value); $('gsAv').textContent = Math.round(v * 100) + ' %'; setE({a: v}, 350); };
+  if ($('gsF')) $('gsF').oninput = e => { const v = Number(e.target.value); $('gsFv').textContent = v + ' s'; S.ingame.fieldSec = v; gsSave({fieldSec: v}, 350); };
+  if ($('gsMode')) $('gsMode').querySelectorAll('a').forEach(a => a.onclick = () => { setE({m: a.dataset.m}, 0); renderGsEdit(); });
+  if ($('gsWH')) $('gsWH').onclick = () => { const e = Object.assign({}, gsEnt(k)); delete e.w; delete e.h;
+    S.ingame.pos = Object.assign({}, S.ingame.pos || {}); S.ingame.pos[k] = e; renderIngame(); gsSave({pos: {[k]: {w: 0, h: 0}}}, 0); };
+}
+/* durees : notification du jeu (coin de l'ecran) et temps pendant lequel une alerte reste dans le bloc « Dernières alertes » */
+const fmtSec = v => v < 60 ? v + ' s' : Math.floor(v / 60) + ' min' + (v % 60 ? ' ' + (v % 60) + ' s' : '');
+const ALERT_STEPS = [10, 15, 20, 30, 45, 60, 90, 120, 180, 240, 300, 420, 600];
+function renderGsDur(){
+  const box = $('gsDur'); if (!box) return;
+  if (!S.ingame){ box.innerHTML = '<span class="muted">Chargement…</span>'; box._ok = false; return; }
+  const ns = typeof S.ingame.notifSec === 'number' ? S.ingame.notifSec : 7, as = typeof S.ingame.alertSec === 'number' ? S.ingame.alertSec : 60;
+  const ai = ALERT_STEPS.reduce((b, v, i) => Math.abs(v - as) < Math.abs(ALERT_STEPS[b] - as) ? i : b, 0);
+  if (box._ok && document.activeElement && box.contains(document.activeElement)) return;     // curseur en cours : on ne le recree pas
+  box._ok = true;
+  box.innerHTML = `<div class="ln"><span class="k">Alertes du jeu (coin de l'écran)</span><input type="range" id="gsN" min="2" max="60" step="1" value="${ns}"><span class="v" id="gsNv">${fmtSec(ns)}</span></div>
+    <div class="ln"><span class="k">Bloc « Dernières alertes » : chaque alerte reste</span><input type="range" id="gsAl" min="0" max="${ALERT_STEPS.length - 1}" step="1" value="${ai}"><span class="v" id="gsAlv">${fmtSec(ALERT_STEPS[ai])}</span></div>
+    <div class="gsHint" style="margin-top:0">Le bloc se cache tout seul quand il n'y a plus d'alerte récente.</div>
+    <div class="ln"><span class="k">Alertes « remorque / trémie pleine »</span><div class="seg2" id="gsFarm"><a data-f="mine" class="${(S.ingame.alertFarm || 'mine') === 'mine' ? 'on' : ''}">Ma ferme</a><a data-f="all" class="${S.ingame.alertFarm === 'all' ? 'on' : ''}">Tout le serveur</a></div></div>
+    <div class="gsHint" style="margin-top:0">« Ma ferme » : seulement toi et les joueurs de ta ferme (dans le jeu et ici).</div>`;
+  $('gsFarm').querySelectorAll('a').forEach(a => a.onclick = () => { S.ingame.alertFarm = a.dataset.f; box._ok = false; renderGsDur(); saveIngame({alertFarm: a.dataset.f}); });
+  $('gsN').oninput = e => { const v = Number(e.target.value); $('gsNv').textContent = fmtSec(v); S.ingame.notifSec = v; gsSave({notifSec: v}, 350); };
+  $('gsAl').oninput = e => { const v = ALERT_STEPS[Number(e.target.value)]; $('gsAlv').textContent = fmtSec(v); S.ingame.alertSec = v; gsSave({alertSec: v}, 350); };
+}
+function renderIngameLite(){ const keep = renderGsEdit; renderGsEdit = () => {}; renderIngame(); renderGsEdit = keep; }
+let gsTimer = null, gsPending = {};
+function gsSave(body, delay){
+  // regroupe les petits changements (curseurs) avant de les envoyer
+  gsPending = JSON.parse(JSON.stringify(Object.assign({}, gsPending, body, body.pos ? {pos: Object.assign({}, gsPending.pos || {}, Object.fromEntries(Object.entries(body.pos).map(([k, v]) => [k, Object.assign({}, (gsPending.pos || {})[k] || {}, v)])))} : {})));
+  clearTimeout(gsTimer);
+  gsTimer = setTimeout(() => { gsTimer = null; const b = gsPending; gsPending = {}; saveIngame(b); }, delay || 0);
+}
+function loadIngame(){
+  fetch('/compagnon/ingame', {cache:'no-store', credentials:'same-origin'}).then(r => r.ok ? r.json() : null)
+    .then(j => { if (j && !j.error){ S.ingame = j; renderIngame(); } }).catch(() => {});
+}
+function saveIngame(body){
+  fetch('/compagnon/ingame', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify(body)})
+    .then(r => r.json()).then(j => { if (j && !j.error && !gsTimer){ S.ingame = j; renderIngameLite(); } }).catch(() => {});
+}
+setTimeout(loadIngame, 800);          // 1.4.4 : reglages lus des l'ouverture (filtre « ma ferme » des alertes)
+/* 1.4.4 : seul l'interrupteur allume / eteint. Toucher le nom choisit le bloc et montre ses reglages
+   (avant, toucher la ligne changeait aussi l'interrupteur : remarque de Luxo, 25/10/2026). */
+document.querySelectorAll('#gameSheet [data-ig]').forEach(a => a.onclick = e => {
+  e.stopPropagation(); if (!S.ingame) return;
+  const k = a.dataset.ig;
+  if (e.target.closest('.sw')){                                     // interrupteur : on / off
+    const v = !gsOn(k); S.ingame[k] = v;
+    if (GB[k]) S.gsSel = k;
+    renderIngame(); saveIngame({[k]: v});
+    return;
+  }
+  if (GB[k]){                                                       // nom d'un bloc : ses reglages
+    S.gsSel = k; renderIngame();
+    $('gsEdit').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+  } else if (k === 'notif'){                                        // alertes du jeu : pas de bloc a placer (coin du jeu) -> on montre leurs reglages
+    $('gsDur').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    $('gsDur').classList.remove('flash'); void $('gsDur').offsetWidth; $('gsDur').classList.add('flash');
+  }
+});
+$('pGame').onclick = e => { e.stopPropagation(); closeMenu(); $('gameSheet').classList.add('open'); loadIngame(); renderIngame(); };
+$('gsClose').onclick = () => $('gameSheet').classList.remove('open');
+$('gameSheet').addEventListener('click', e => { if (e.target.id === 'gameSheet') $('gameSheet').classList.remove('open'); });
+$('gsReset').onclick = () => { if (!S.ingame) return; delete S.ingame.pos; delete S.ingame.scale; delete S.ingame.fieldSec; delete S.ingame.alertSec; delete S.ingame.notifSec; $('gsDur')._ok = false; renderIngame(); saveIngame({resetLayout: true}); };
+/* glisser / choisir un bloc dans l'apercu */
+function gsDrag(el){
+  el.addEventListener('pointerdown', e => {
+    if (!S.ingame) return;
+    e.preventDefault(); el.setPointerCapture(e.pointerId);
+    const k = el.dataset.p, box = $('gsScreen').getBoundingClientRect(), g0 = gsGeom(k), sx = e.clientX, sy = e.clientY;
+    const rs = e.target.classList.contains('rsz');
+    let moved = false;
+    if (S.gsSel !== k){ S.gsSel = k; renderIngame(); }
+    const move = ev => {
+      if (!moved && Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) < 4) return;
+      moved = true; el.classList.add('drag');
+      S.ingame.pos = Object.assign({}, S.ingame.pos || {});
+      if (rs){                                                    // coin : largeur / hauteur
+        const w = Math.max(.06, Math.min(g0.w + (ev.clientX - sx) / box.width, .9, 1 - g0.x));
+        const h = Math.max(.04, Math.min(g0.h + (ev.clientY - sy) / box.height, .95, 1 - g0.y));
+        S.ingame.pos[k] = Object.assign({}, gsEnt(k), {x: g0.x, y: g0.y, w: Math.round(w / g0.kA * 1e4) / 1e4, h: Math.round(h * 1e4) / 1e4});
+      } else {
+        const x = Math.max(0, Math.min(g0.x + (ev.clientX - sx) / box.width, 1 - g0.w));
+        const y = Math.max(0, Math.min(g0.y + (ev.clientY - sy) / box.height, 1 - g0.h));
+        S.ingame.pos[k] = Object.assign({}, gsEnt(k), {x: Math.round(x * 1e4) / 1e4, y: Math.round(y * 1e4) / 1e4});
+      }
+      renderIngameLite();
+    };
+    const up = () => {
+      el.classList.remove('drag'); el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
+      if (moved){ const e2 = gsEnt(k); gsSave({pos: {[k]: rs ? {x: e2.x, y: e2.y, w: e2.w, h: e2.h} : {x: e2.x, y: e2.y}}}, 0); if (rs) renderGsEdit(); }
+    };
+    el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+  });
+}
+renderIngame(); loadIngame();
+
+/* ================= notes perso (partagees, gardees par l'app sur le PC) ================= */
+function loadNotes(){
+  if (!S.mapKey) return;
+  fetch('/compagnon/notes?map=' + encodeURIComponent(S.mapKey) + '&t=' + Date.now(), {cache:'no-store', credentials:'same-origin'})
+    .then(r => r.ok ? r.json() : null).then(j => { if (j && typeof j === 'object' && !j.error){ S.notes = j; S.notesAt = Date.now(); renderAll(); } }).catch(() => {});
+}
+let noteTimer = null;
+function renderNoteBox(){
+  const box = $('ficheNote'), ta = $('noteIn');
+  box.classList.remove('hide');
+  if (S.noteFor !== S.sel){ S.noteFor = S.sel; ta.value = S.notes[S.sel] || ''; $('noteSt').textContent = 'Partagée sur tous tes écrans'; }
+  else if (document.activeElement !== ta && !noteTimer && ta.value !== (S.notes[S.sel] || '')) ta.value = S.notes[S.sel] || '';
+}
+function saveNote(){
+  clearTimeout(noteTimer); noteTimer = null;
+  const id = S.noteFor, text = $('noteIn').value;
+  if (id == null || !S.mapKey) return;
+  if ((S.notes[id] || '') === text.trim()){ $('noteSt').textContent = text.trim() ? 'Enregistrée ✓' : 'Partagée sur tous tes écrans'; return; }
+  $('noteSt').textContent = 'Enregistrement…';
+  fetch('/compagnon/notes', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify({map:S.mapKey, id, text})})
+    .then(r => r.json()).then(j => { if (j && !j.error){ S.notes = j; $('noteSt').textContent = 'Enregistrée ✓'; renderTable(); renderTodo(); } else $('noteSt').textContent = 'Erreur : ' + ((j && j.error) || '?'); })
+    .catch(() => { $('noteSt').textContent = "Pas enregistrée : l'application ne répond pas."; });
+}
+$('noteIn').addEventListener('input', () => { clearTimeout(noteTimer); $('noteSt').textContent = '…'; noteTimer = setTimeout(saveNote, 1200); });
+$('noteIn').addEventListener('blur', saveNote);
+
+/* ================= carte : vue, dessin ================= */
+const MV = () => $('mapView');
+function fitScale(){ const v = MV(); return Math.min(v.clientWidth, v.clientHeight) / S.size || 0.3; }
+function clampView(){
+  if (!S.view) return;
+  const fit = fitScale(), half = S.size / 2;
+  S.view.s = Math.max(fit * 0.9, Math.min(4, S.view.s));
+  S.view.cx = Math.max(-half, Math.min(half, S.view.cx));
+  S.view.cz = Math.max(-half, Math.min(half, S.view.cz));
+}
+function fitIfNeeded(force, noFollow){
+  const v = MV(); if (!v.clientWidth) return;
+  if (S.view && !force) return;
+  const me = players().find(p => p.self);
+  if (document.body.classList.contains('phone') && me && !noFollow){ S.view = {cx:me.x, cz:me.z, s:fitScale() * 2.5}; S.follow = true; }
+  else { S.view = {cx:0, cz:0, s:fitScale()}; S.follow = false; }
+  $('zMe').classList.toggle('on', S.follow);
+  clampView();
+}
+function centerWorld(x, z, s){ if (!S.view) fitIfNeeded(true); S.view.cx = x; S.view.cz = z; if (s) S.view.s = s; clampView(); drawMap(); }
+function centerOn(id){
+  const f = S.byId[id]; if (!f) return;
+  S.follow = false; $('zMe').classList.remove('on');
+  const v = MV(), w = Math.max(f.bb[2] - f.bb[0], f.bb[3] - f.bb[1], 60);
+  const s = Math.min(v.clientWidth, v.clientHeight) / (w * 2.2);
+  centerWorld(f.cx, f.cz, Math.max(S.view ? S.view.s : 0, s));
+}
+let fieldEls = [];
+function buildFieldPaths(){
+  const g = $('fieldsG'); g.replaceChildren(); fieldEls = [];
+  S.fields.forEach(f => {
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    p.setAttribute('d', f.polys.map(q => { let s = ''; for (let i = 0; i + 1 < q.length; i += 2) s += (i ? 'L' : 'M') + q[i] + ' ' + q[i + 1]; return s + 'Z'; }).join(''));
+    p.setAttribute('fill-rule', 'evenodd');
+    g.appendChild(p); fieldEls.push([f, p]);
+  });
+  paintFields();
+}
+function paintFields(){
+  fieldEls.forEach(([f, p]) => {
+    let fill = S.layer ? fieldFill(S.states[f.id], S.layer) : null;
+    if (fill && (S.hidden[S.layer] || []).includes(fill.label)) fill = null;      // couleur masquee via la legende
+    p.style.fill = fill ? fill.color : '';
+    p.setAttribute('class', (fill ? '' : 'none') + (f.id === S.sel ? ' sel' : ''));
+    p.style.strokeWidth = f.id === S.sel && S.view ? (3.5 / S.view.s) + 'px' : '';     // epaisseur normale pour les autres
+  });
+  // le champ choisi passe au-dessus des autres (contour bien visible)
+  const sel = fieldEls.find(([f]) => f.id === S.sel); if (sel) $('fieldsG').appendChild(sel[1]);
+}
+function renderLegend(){
+  document.querySelectorAll('#layers a').forEach(a => a.classList.toggle('on', Number(a.dataset.l) === S.layer));
+  paintFields();
+  const used = new Map(), hid = S.hidden[S.layer] || [];
+  if (S.layer) S.fields.forEach(f => { const fl = fieldFill(S.states[f.id], S.layer); if (fl && !used.has(fl.label)) used.set(fl.label, fl.key || fl.color); });
+  let html = [...used].map(([l, c]) => `<span class="lgi${hid.includes(l) ? ' off' : ''}" data-lg="${esc(l)}" title="Toucher pour masquer / afficher cette couleur"><i style="background:${c}"></i>${esc(l)}</span>`).join('');
+  if (html && [...used.keys()].some(l => !hid.includes(l))) html += '<span class="lgi lgall" data-lgnone="1" title="Masquer toutes les couleurs, puis toucher celles à afficher">✕ Aucun</span>';
+  if (html && hid.some(l => used.has(l))) html += '<span class="lgi lgall" data-lgall="1" title="Réafficher toutes les couleurs">↺ Tout</span>';
+  // tablette / telephone : legende repliee en pastille « 🎨 Légende » (etat garde sur l'appareil)
+  const fold = html && !document.body.classList.contains('pc');
+  if (fold) html = S.legOpen ? `<div class="lghd"><b>🎨 Légende</b><span class="lgtog" data-lgtog="1">▾ fermer</span></div>` + html
+                             : `<span class="lgtog" data-lgtog="1">🎨 Légende · ${used.size} ▸</span>`;
+  const lg = $('legend'); lg.classList.toggle('fold', !!fold && !S.legOpen);
+  if (lg._h !== html){ lg.innerHTML = html; lg._h = html; }
+}
+S.legOpen = store.get('legOpen', false);
+function toggleLegend(label){
+  const cur = new Set(S.hidden[S.layer] || []);
+  if (cur.has(label)) cur.delete(label); else cur.add(label);
+  S.hidden[S.layer] = [...cur]; store.set('hidden', S.hidden); renderLegend();
+}
+$('legend').addEventListener('click', e => {
+  if (e.target.closest('[data-lgtog]')){ S.legOpen = !S.legOpen; store.set('legOpen', S.legOpen); renderLegend(); return; }
+  const el = e.target.closest('.lgi'); if (!el) return;
+  if (el.dataset.lgall){ S.hidden[S.layer] = []; store.set('hidden', S.hidden); renderLegend(); return; }
+  if (el.dataset.lgnone){                                          // tout masquer : on garde aussi les noms deja masques
+    const all = new Set(S.hidden[S.layer] || []);
+    S.fields.forEach(f => { const fl = fieldFill(S.states[f.id], S.layer); if (fl) all.add(fl.label); });
+    S.hidden[S.layer] = [...all]; store.set('hidden', S.hidden); renderLegend(); return;
+  }
+  toggleLegend(el.dataset.lg);
+});
+document.querySelectorAll('#layers a').forEach(a => a.onclick = () => { S.layer = Number(a.dataset.l); store.set('layer', S.layer); renderLegend(); });
+
+let drawQueued = false;
+function drawMap(){ if (drawQueued) return; drawQueued = true; requestAnimationFrame(() => { drawQueued = false; drawNow(); }); }
+function drawNow(){
+  const v = MV(), W = v.clientWidth, H = v.clientHeight; if (!W || !H) return;
+  if (!S.view) fitIfNeeded(true);
+  const ps = players(), me = ps.find(p => p.self);
+  if (S.follow && me){ S.view.cx = me.x; S.view.cz = me.z; clampView(); }
+  const {cx, cz, s} = S.view, half = S.size / 2;
+  const img = $('mapImg');
+  img.style.left = ((-half - cx) * s + W / 2) + 'px'; img.style.top = ((-half - cz) * s + H / 2) + 'px';
+  img.style.width = img.style.height = (S.size * s) + 'px';
+  const svg = $('fieldsSvg');
+  svg.setAttribute('viewBox', `${cx - W / 2 / s} ${cz - H / 2 / s} ${W / s} ${H / s}`);
+  $('fieldsG').style.strokeWidth = (1.4 / s) + 'px';
+  const selEl = $('fieldsG').querySelector('path.sel'); if (selEl) selEl.style.strokeWidth = (3.5 / s) + 'px';
+  const X = x => (x - cx) * s + W / 2, Z = z => (z - cz) * s + H / 2;
+  // numeros des champs (seulement s'ils tiennent a l'ecran)
+  let lab = '';
+  S.fields.forEach(f => {
+    const w = (f.bb[2] - f.bb[0]) * s, h = (f.bb[3] - f.bb[1]) * s;
+    if (Math.min(w, h) < 18 && f.id !== S.sel) return;
+    const x = X(f.cx), y = Z(f.cz); if (x < -20 || y < -20 || x > W + 20 || y > H + 20) return;
+    lab += `<div class="flab${Math.min(w, h) > 90 ? ' big' : ''}" style="left:${x}px;top:${y}px">${f.id}</div>`;
+  });
+  const L = $('labels'); if (L._h !== lab){ L.innerHTML = lab; L._h = lab; }
+  // joueurs
+  let pin = '';
+  ps.forEach(p => {
+    const x = X(p.x), y = Z(p.z); if (x < -40 || y < -40 || x > W + 40 || y > H + 40) return;
+    const hasDir = typeof p.dx === 'number' && typeof p.dz === 'number' && (p.dx || p.dz);
+    const r = hasDir ? (Math.atan2(p.dx, -p.dz) * 180 / Math.PI).toFixed(0) : 0;
+    pin += `<div class="pin${afkTxt(p) ? ' afk' : ''}" style="left:${x}px;top:${y}px;--c:${p.col}">` + (hasDir
+      ? `<svg class="arr" viewBox="0 0 40 40" style="--r:${r}deg"><path d="M20 3 L34 35 L20 27 L6 35 Z" fill="${p.col}" stroke="#0b120e" stroke-width="3" stroke-linejoin="round"/></svg>`
+      : '<div class="dotp"></div>') + `<div class="nm">${afkTxt(p) ? '<span class="zz">z<sup>z</sup></span>' : ''}${esc(p.name || 'Joueur')}</div></div>`;
+  });
+  // lieux (maison, batiments)
+  // icones trop proches : regroupees en une pastille « 🏠 8 » (toucher = zoom sur le groupe)
+  const vis = mapPlaces().map(pl => ({pl, x: X(pl.x), y: Z(pl.z)})).filter(o => o.x > -20 && o.y > -20 && o.x < W + 20 && o.y < H + 20);
+  const groups = [];
+  vis.sort((a, b) => (b.pl.id === 'home') - (a.pl.id === 'home') || (b.pl.k === 'sell') - (a.pl.k === 'sell'));
+  vis.forEach(o => { const g = groups.find(g => Math.hypot(g.x - o.x, g.y - o.y) < 26); if (g){ g.m.push(o); g.x = g.m.reduce((a, q) => a + q.x, 0) / g.m.length; g.y = g.m.reduce((a, q) => a + q.y, 0) / g.m.length; } else groups.push({x: o.x, y: o.y, m: [o]}); });
+  S.pinHits = [];
+  groups.forEach(g => {
+    if (g.m.length === 1){ const {pl, x, y} = g.m[0];
+      S.pinHits.push({pl: pl.id, x, y});
+      pin += `<div class="ppin${pl.id === 'home' ? ' home' : pl.k === 'sell' ? '' : ' small'}${S.placeSel === pl.id ? ' sel' : ''}" style="left:${x}px;top:${y}px"><i>${PLACE_IC[pl.k] || '📍'}</i></div>`;
+      return; }
+    const cnt = {}; g.m.forEach(o => { cnt[o.pl.k] = (cnt[o.pl.k] || 0) + 1; });
+    const top = g.m.some(o => o.pl.id === 'home') ? 'home' : Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0];
+    const sel = g.m.some(o => o.pl.id === S.placeSel);
+    S.pinHits.push({clu: g.m.map(o => o.pl), x: g.x, y: g.y});
+    pin += `<div class="ppin clu${sel ? ' sel' : ''}" style="left:${g.x}px;top:${g.y}px"><i>${PLACE_IC[top] || '📍'} ${g.m.length}</i></div>`;
+  });
+  // engin choisi dans la liste
+  const vs = S.vehSel && (farmVehicles() || []).find(v => v.id === S.vehSel);
+  if (vs && typeof vs.x === 'number'){ const x = X(vs.x), y = Z(vs.z); if (x > -20 && y > -20 && x < W + 20 && y < H + 20) pin += `<div class="vpin" style="left:${x}px;top:${y}px"><i></i></div>`; }
+  const P = $('pins'); if (P._h !== pin){ P.innerHTML = pin; P._h = pin; }
+}
+
+new ResizeObserver(() => { clampView(); drawNow(); }).observe($('mapView'));
+
+/* ================= carte : doigts, souris ================= */
+// Doigts : evenements "touch" (les plus fiables sur iPhone / Android, avec preventDefault : ni loupe, ni zoom de la page).
+// Souris / stylet : evenements "pointer". Les deux passent par down / move / up.
+(function(){
+  const v = MV(), pts = new Map();
+  let start = null, moved = false, lastTap = null;
+  const zoomAt = (fx, fy, k) => {
+    if (!S.view) return;
+    const W = v.clientWidth, H = v.clientHeight, r = v.getBoundingClientRect();
+    const px = fx - r.left - W / 2, py = fy - r.top - H / 2;
+    const wx = S.view.cx + px / S.view.s, wz = S.view.cz + py / S.view.s;
+    S.view.s *= k; clampView();
+    S.view.cx = wx - px / S.view.s; S.view.cz = wz - py / S.view.s; clampView(); drawMap();
+  };
+  const stopFollow = () => { if (S.follow){ S.follow = false; $('zMe').classList.remove('on'); } };
+  const restart = () => {
+    if (pts.size === 1){ const p = [...pts.values()][0]; start = {x:p.x, y:p.y, cx:S.view && S.view.cx, cz:S.view && S.view.cz}; }
+    else if (pts.size >= 2){ const [a, b] = [...pts.values()]; start = {pinch:Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), mx:(a.x + b.x) / 2, my:(a.y + b.y) / 2}; }
+    else start = null;
+  };
+  const down = (id, x, y) => {
+    if (!S.view) fitIfNeeded(true);
+    if (pts.size === 0) moved = false;
+    pts.set(id, {x, y}); v.classList.add('drag');
+    if (pts.size >= 2) moved = true;
+    restart();
+  };
+  const move = (id, x, y) => {
+    if (!pts.has(id) || !S.view || !start) return;
+    pts.set(id, {x, y});
+    if (pts.size === 1 && start.cx != null){
+      const dx = x - start.x, dy = y - start.y;
+      if (!moved && Math.hypot(dx, dy) < 8) return;
+      moved = true; stopFollow();
+      S.view.cx = start.cx - dx / S.view.s; S.view.cz = start.cz - dy / S.view.s; clampView(); drawMap();
+    } else if (pts.size >= 2 && start.pinch){
+      const [a, b] = [...pts.values()], d = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      stopFollow();
+      S.view.cx -= (mx - start.mx) / S.view.s; S.view.cz -= (my - start.my) / S.view.s;
+      zoomAt(mx, my, d / start.pinch);
+      start.pinch = d; start.mx = mx; start.my = my;
+    }
+  };
+  const up = (id, x, y, tap) => {
+    if (!pts.has(id)) return;
+    pts.delete(id);
+    if (pts.size === 0){
+      v.classList.remove('drag');
+      if (tap && !moved && start && start.cx != null && S.view){              // simple toucher : choisir un champ
+        const r = v.getBoundingClientRect();
+        const wx = S.view.cx + (x - r.left - v.clientWidth / 2) / S.view.s, wz = S.view.cz + (y - r.top - v.clientHeight / 2) / S.view.s;
+        const now = Date.now(), tol = 16 / S.view.s;
+        const sx = x - r.left, sy = y - r.top;
+        const hit = (S.pinHits || []).map(h => ({h, d: Math.hypot(h.x - sx, h.y - sy)})).filter(o => o.d < (o.h.clu ? 22 : 16)).sort((a, b) => a.d - b.d)[0];
+        if (hit && hit.h.clu){                                                  // groupe : on zoome dessus
+          const L = hit.h.clu, xs = L.map(p => p.x), zs = L.map(p => p.z);
+          const ext = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs), 20);
+          const s2 = Math.max(S.view.s * 2, Math.min(v.clientWidth, v.clientHeight) / (ext * 2.5));
+          S.follow = false; $('zMe').classList.remove('on');
+          centerWorld((Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...zs) + Math.min(...zs)) / 2, s2);
+          lastTap = null; start = null; return;
+        }
+        const pl = hit ? mapPlaces().find(p => p.id === hit.h.pl) : null;
+        if (pl){
+          if (lastTap && lastTap.pl === pl.id && now - lastTap.at < 420){ lastTap = null; goPlace(pl.id); }
+          else { lastTap = {pl: pl.id, at: now}; pickPlace(pl.id); }
+          start = null; return;
+        }
+        const f = fieldAt(wx, wz);
+        if (f && lastTap && lastTap.id === f.id && now - lastTap.at < 420){ lastTap = null; goTo('field', f.id); }   // double-clic / double toucher : y aller
+        else { lastTap = f ? {id: f.id, at: now} : null; selectField(f ? f.id : null); }
+      }
+      start = null;
+    } else restart();
+  };
+  // doigts
+  const opt = {passive:false};
+  v.addEventListener('touchstart', e => { e.preventDefault(); for (const t of e.changedTouches) down('t' + t.identifier, t.clientX, t.clientY); }, opt);
+  v.addEventListener('touchmove', e => { e.preventDefault(); for (const t of e.changedTouches) move('t' + t.identifier, t.clientX, t.clientY); }, opt);
+  v.addEventListener('touchend', e => { e.preventDefault(); for (const t of e.changedTouches) up('t' + t.identifier, t.clientX, t.clientY, true); }, opt);
+  v.addEventListener('touchcancel', e => { for (const t of e.changedTouches) up('t' + t.identifier, t.clientX, t.clientY, false); }, opt);
+  v.addEventListener('gesturestart', e => e.preventDefault());                // Safari : pas de zoom de la page sur la carte
+  v.addEventListener('contextmenu', e => e.preventDefault());
+  // souris / stylet
+  v.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') return; try { v.setPointerCapture(e.pointerId); } catch (_) {} down('p' + e.pointerId, e.clientX, e.clientY); });
+  v.addEventListener('pointermove', e => { if (e.pointerType !== 'touch') move('p' + e.pointerId, e.clientX, e.clientY); });
+  v.addEventListener('pointerup', e => { if (e.pointerType !== 'touch') up('p' + e.pointerId, e.clientX, e.clientY, true); });
+  v.addEventListener('pointercancel', e => { if (e.pointerType !== 'touch') up('p' + e.pointerId, e.clientX, e.clientY, false); });
+  v.addEventListener('wheel', e => { e.preventDefault(); zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.0015)); }, {passive:false});
+  const zoomBtn = k => { const r = v.getBoundingClientRect(); zoomAt(r.left + v.clientWidth / 2, r.top + v.clientHeight / 2, k); };
+  $('zIn').onclick = () => zoomBtn(1.6);
+  $('zOut').onclick = () => zoomBtn(1 / 1.6);
+  $('zMe').onclick = () => {
+    const me = players().find(p => p.self);
+    if (!me){ fitIfNeeded(true, true); drawMap(); return; }
+    S.follow = !S.follow; $('zMe').classList.toggle('on', S.follow);
+    if (S.follow) centerWorld(me.x, me.z, Math.max(S.view.s, fitScale() * 3)); else { fitIfNeeded(true, true); drawMap(); }
+  };
+})();
+
+/* ================= code d'acces ================= */
+function showCode(){ $('codeBox').classList.add('show'); setTimeout(() => $('codeIn').focus(), 50); }
+$('codeOk').onclick = () => {
+  fetch('/compagnon/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({code:$('codeIn').value.trim()}), credentials:'same-origin'})
+    .then(r => { if (r.ok){ $('codeBox').classList.remove('show'); $('codeErr').textContent = ''; loadIngame(); loadNotes(); } else $('codeErr').textContent = 'Code incorrect.'; })
+    .catch(() => { $('codeErr').textContent = "L'application ne répond pas."; });
+};
+$('codeIn').onkeydown = e => { if (e.key === 'Enter') $('codeOk').click(); };
+
+/* ================= depart ================= */
+applyMode();
+renderAll();
+poll();
+</script>
+</body>
+</html>

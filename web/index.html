@@ -1,0 +1,1852 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FS25 Stream &amp; Companion</title>
+<link rel="icon" href="/stream/icon.svg">
+<style>
+:root{
+  color-scheme:dark;
+  --cardA:.92;--bg:#0c1210;--line:#2c3d33;--green:#8fe45f;--text:#f3f7f2;--muted:#a3b3a8;--amber:#e7ae51;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{color:var(--text);font-family:"Segoe UI",Arial,sans-serif;overflow:hidden;
+  background:radial-gradient(ellipse at 20% 0%,#1d3026 0%,var(--bg) 70%)}
+body.transparent{background:transparent}
+/* fond des blocs tres transparent : ombre portee sur le texte pour rester lisible */
+body.lowbg .blk:not(.hasalpha),.blk.lowbg{text-shadow:0 1px 3px #000,0 0 10px #000c}
+.partoff{display:none!important}
+
+#stage{position:absolute;left:0;top:0;width:100%;height:100%}
+#stage.fixed{outline:1px dashed #8fe45f66;background:#ffffff08}
+
+/* hors partie (menu principal, jeu ferme) : les modules s'effacent en fondu */
+.blk{transition:opacity .5s}
+body.nosession:not(.edit):not(.showidle) .blk:not([data-id=brand]){opacity:0;pointer-events:none}   /* le logo reste affiche */
+
+/* --- blocs positionnes en % de l'ecran ; --u = facteur d'echelle du bloc --- */
+.blk{position:absolute;--u:1;min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden;
+  font-size:calc(var(--u)*18px)}
+.card{background:linear-gradient(150deg,rgba(26,38,31,var(--cardA)),rgba(16,23,19,var(--cardA)));border-color:rgba(44,61,51,clamp(0,calc(var(--cardA)*1.3),1)) !important;
+  border:1px solid var(--line);border-radius:calc(var(--u)*22px);padding:calc(var(--u)*18px) calc(var(--u)*22px)}
+.label{font-size:calc(var(--u)*18px);line-height:1.2;letter-spacing:.14em;color:var(--muted);font-weight:700;text-transform:uppercase;white-space:nowrap}
+.val{font-size:calc(var(--u)*28px);line-height:1.25;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{padding:calc(var(--u)*6px) calc(var(--u)*16px);gap:calc(var(--u)*2px)}
+.val,.label,.big{flex-shrink:0}
+.center{justify-content:center}
+
+/* marque */
+.brand{flex-direction:row;align-items:center;gap:calc(var(--u)*16px)}
+.logo{font-weight:900;font-size:calc(var(--u)*46px);color:#fff;background:#4f9d2a;border-radius:calc(var(--u)*12px);
+  padding:calc(var(--u)*4px) calc(var(--u)*14px);transform:skewX(-8deg);line-height:1.15}
+.brand{gap:calc(var(--u)*14px)}
+.brand .bglyph{height:calc(var(--u)*70px);width:calc(var(--u)*90px);flex-shrink:0;color:var(--green);filter:drop-shadow(0 2px 6px #000a)}
+.brand .btxt{min-width:0}
+.brand h1{margin:0;font-size:calc(var(--u)*34px);line-height:1;font-weight:900;letter-spacing:.01em;white-space:nowrap;text-shadow:0 2px 10px #000c}
+.brand h1 b{color:var(--green);font-weight:900}
+.brand small{display:flex;align-items:center;gap:calc(var(--u)*8px);margin-top:calc(var(--u)*6px);font-size:calc(var(--u)*15px);color:#e8eee4;
+  letter-spacing:.2em;text-transform:uppercase;white-space:nowrap;text-shadow:0 1px 6px #000}
+.brand small i{width:calc(var(--u)*22px);height:calc(var(--u)*2px);background:var(--green);display:inline-block;flex-shrink:0}
+
+/* images */
+.imgwrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.imgwrap img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 12px 16px #000a)}
+.imgwrap{position:relative}
+.imgwrap .ph{display:none;font-size:calc(var(--u)*120px);opacity:.25}
+.wmenu{display:none;position:absolute;top:6px;right:6px;z-index:6;flex-direction:column;align-items:flex-end;gap:6px;max-width:calc(100% - 12px)}
+.wmenu .wbtns{display:none;gap:6px;flex-wrap:wrap;justify-content:flex-end;padding:6px;border-radius:10px;background:#0d1410f0;border:1px solid var(--line)}
+.wmenu.open .wbtns{display:flex}
+.wtoggle{padding:4px 10px;border-radius:8px;border:1px solid var(--green);background:#0d1410e6;color:var(--green);font:700 12px "Segoe UI",Arial;cursor:pointer}
+.wmenu.open .wtoggle{background:var(--green);color:#0d1410}
+.gsearch{display:flex;gap:6px;width:100%;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.gsearch input[type=text]{width:min(270px,42vw);padding:4px 8px;border-radius:8px;border:1px solid var(--line);
+  background:#0d1410e6;color:var(--text);font:12px "Segoe UI",Arial;user-select:text;cursor:text}
+.gsearch input[type=text]:focus{outline:none;border-color:var(--green)}
+.gsearch label{display:flex;gap:4px;align-items:center;background:#0d1410e6;padding:4px 8px;border-radius:8px;
+  border:1px solid var(--line);font:600 12px "Segoe UI",Arial;cursor:pointer;color:var(--text)}
+.gsearch label input{accent-color:#8fe45f}
+/* cartes etroites (bandeau) : boutons d'edition compacts, sans le champ de recherche */
+.blk.wide .gsearch input[type=text],.blk.wide .gsearch label{display:none}
+.blk.wide .webbtn{padding:3px 8px;font-size:11px}
+.webbtn{padding:4px 10px;border-radius:8px;border:1px solid var(--green);
+  background:#0d1410e6;color:var(--text);font:600 12px "Segoe UI",Arial;cursor:pointer}
+.edit .wmenu{display:flex}
+.edit .imgwrap.drop{outline:3px dashed var(--green);outline-offset:-6px;background:#8fe45f1a}
+.edit .imgwrap.foot .wmenu{display:none}
+
+.capmodal{position:fixed;inset:0;z-index:100;background:#000c;display:none;align-items:center;justify-content:center;font:14px "Segoe UI",Arial;color:var(--text)}
+.capmodal.show{display:flex}
+.capbox{background:#0d1410;border:1px solid var(--green);border-radius:14px;padding:14px;max-width:94vw;max-height:95vh;display:flex;flex-direction:column;gap:10px}
+.caphead{display:flex;justify-content:space-between;align-items:center;font-weight:700;color:var(--green)}
+.capstage{position:relative;line-height:0;user-select:none;align-self:center}
+.capstage video,.capstage canvas{max-width:88vw;max-height:68vh;display:block;border-radius:8px;background:#000}
+.capmodal [hidden]{display:none!important}
+.capstage canvas{cursor:crosshair}
+#capSel{position:absolute;border:2px solid var(--green);background:#8fe45f22;pointer-events:none;display:none;box-shadow:0 0 0 9999px #0008}
+.capbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.capbar button,.caphead button{padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:#1b2a21;color:var(--text);font:inherit;cursor:pointer}
+.capbar button:hover,.caphead button:hover{border-color:var(--green)}
+.capbar .hint{color:var(--muted);font-size:13px}
+.scene{display:none;width:100%;height:100%;border-radius:calc(var(--u)*16px);overflow:hidden}
+.imgwrap.foot{padding-bottom:calc(var(--u)*10px)}
+.imgwrap.foot .scene{display:block}
+.imgwrap.foot img,.imgwrap.foot .ph{display:none!important}
+.blk.onfoot .stats,.blk.onfoot #vehFills,.blk.onfoot #vehIcons{display:none!important}
+.imgwrap.noimg img{display:none}.imgwrap.noimg .ph{display:block}
+.title{text-align:center;font-weight:900;text-transform:uppercase;font-size:calc(var(--u)*52px);line-height:1.15;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+.brandline{text-align:center;color:var(--green);font-weight:700;letter-spacing:.16em;flex-shrink:0;
+  font-size:calc(var(--u)*20px);text-transform:uppercase;min-height:calc(var(--u)*26px)}
+
+/* outils */
+.impls{flex:1;min-height:0;display:flex;flex-direction:column;gap:calc(var(--u)*10px);margin-top:calc(var(--u)*10px)}
+.impl{flex:1;min-height:0;display:flex;flex-direction:column}
+.impl .meta{flex-shrink:0;min-width:0}
+.impls.multi .impl{flex-direction:row;align-items:center;gap:calc(var(--u)*16px);
+  background:rgba(0,0,0,.14);border:1px solid var(--line);border-radius:calc(var(--u)*16px);padding:calc(var(--u)*8px) calc(var(--u)*12px)}
+.impls.multi .impl .imgwrap{flex:0 0 46%;height:100%}
+.impls.multi .impl .meta{flex:1}
+.impls.multi .title{text-align:left;font-size:calc(var(--u)*32px);white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.blk[data-id=implements] .impl{overflow:hidden}
+.impls.multi .brandline{text-align:left}
+.none{margin:auto;color:var(--muted);font-size:calc(var(--u)*26px)}
+
+/* bandeau de stats dans la carte du vehicule */
+.stats{display:flex;gap:calc(var(--u)*12px);margin-top:calc(var(--u)*10px);flex-shrink:0}
+.stat{flex:1;min-width:0;background:rgba(0,0,0,calc(var(--cardA)*.22));border:1px solid var(--line);border-radius:calc(var(--u)*16px);
+  padding:calc(var(--u)*10px) calc(var(--u)*16px);display:flex;flex-direction:column;justify-content:center}
+.stat.sp{flex:1.25}
+.speed{font-size:calc(var(--u)*84px);font-weight:900;color:var(--green);line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap}
+.speed small{font-size:calc(var(--u)*24px);color:var(--muted);font-weight:600;margin-left:calc(var(--u)*6px)}
+.big{font-size:calc(var(--u)*34px);line-height:1.2;font-weight:800}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.bar{height:calc(var(--u)*14px);border-radius:999px;background:#0c120f;border:1px solid var(--line);overflow:hidden;margin:calc(var(--u)*8px) 0}
+.bar i{display:block;height:100%;width:0;background:var(--green);transition:width .4s}
+.sub{color:var(--muted);font-size:calc(var(--u)*18px);line-height:1.2;white-space:nowrap}
+
+/* voyants : rangee d'icones en haut de la carte du vehicule, et sur les cartes d'outils */
+.icons{display:flex;align-items:center;gap:calc(var(--u)*14px);margin-top:calc(var(--u)*12px);flex-shrink:0}
+.icons.none{display:none}
+.ig{display:flex;align-items:center;gap:calc(var(--u)*10px)}
+.icons .ig.alerts{margin-left:auto}
+.impl .icons{justify-content:center;margin-top:calc(var(--u)*8px)}
+.impl .icons .ig{flex-wrap:wrap;justify-content:center}
+.ico{--c:#7d8d83;display:block;flex:none;width:calc(var(--u)*48px);height:calc(var(--u)*48px)}
+.impl .ico{width:calc(var(--u)*38px);height:calc(var(--u)*38px)}
+.ico svg{display:block;width:100%;height:100%;overflow:visible}
+.ico .tile{fill:#1e2d25;stroke:#33463b;stroke-width:1}
+.ico.on .tile{fill:#243a2e;stroke:var(--c)}
+.ico .s{fill:none;stroke:var(--c);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.ico .s2{fill:none;stroke:var(--c);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ico .f{fill:var(--c);stroke:none}
+.ico .disc{fill:var(--c)}
+.ico .pw{fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round}
+.ico .ltr{fill:var(--c);font:600 17px "Segoe UI",Arial,sans-serif}
+.ico[data-k=engine]{--c:#c93d3d}.ico[data-k=engine].on{--c:#2fa84f}
+.ico[data-k=lights].on{--c:#4c9bff}.ico[data-k=lights].on .lamp{fill:var(--c)}
+.ico[data-k=beacon].on{--c:#f5a623}
+.ico[data-k=brake].on,.ico[data-k=fuel].on{--c:#ef5350}
+.ico[data-k=cruise].on,.ico[data-k=lowered].on,.ico[data-k=turned].on,.ico[data-k=unfolded].on{--c:#3fbf5f}
+.ico[data-k=wrench].on{--c:#f5c04a}
+.ico[data-k=lowered].on .up,.ico[data-k=lowered]:not(.on) .down{display:none}
+.ico[data-k=unfolded].on .shut,.ico[data-k=unfolded]:not(.on) .open{display:none}
+.ico.on[data-k=turned] .spin{transform-box:view-box;transform-origin:20px 20px;animation:icospin 1.4s linear infinite}
+@keyframes icospin{to{transform:rotate(360deg)}}
+/* gyrophare : eclats gauche / droite, le dome s'allume du meme cote */
+.ico[data-k=beacon] .dome{fill:none}.ico[data-k=beacon].on .dome{fill:rgba(245,166,35,.25)}
+.ico .half{fill:#f5a623;opacity:.6}
+.ico .fx{opacity:0}.ico.on .fx{opacity:1}
+.ico.on .ga{animation:icoalt 1s steps(1,end) infinite}
+.ico.on .gb{animation:icoalt 1s steps(1,end) infinite;animation-delay:-.5s}
+@keyframes icoalt{0%{opacity:1}50%{opacity:.12}100%{opacity:1}}
+.ico.on.blink{animation:icoblink 1s steps(2,start) infinite}
+@keyframes icoblink{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.ico.on .ga,.ico.on .gb,.ico.on.blink,.ico.on[data-k=turned] .spin{animation:none}}
+
+/* heure de jeu : vitesse du temps ; meteo : previsions */
+.val .tsc{font-size:.58em;margin-left:calc(var(--u)*10px);color:var(--green);font-weight:800;letter-spacing:.02em}
+.fc{display:flex;flex-wrap:wrap;gap:0 calc(var(--u)*12px);height:calc(var(--u)*21px);overflow:hidden;flex-shrink:0;
+  font-size:calc(var(--u)*15px);line-height:1.4;color:var(--muted);white-space:nowrap}
+.fc.none{display:none}
+.fc .fci b{color:var(--text);font-weight:600}
+
+/* bloc Champ : numero, culture, croissance, fertilisation, chaux... (chaque tuile : etiquette / valeur ou jauge / sous-texte) */
+.blk[data-id=field]{padding:calc(var(--u)*10px) calc(var(--u)*14px)}
+.ftiles{display:flex;gap:calc(var(--u)*12px);flex:1;min-height:0}
+.ft{flex:1 1 0;min-width:0;background:rgba(0,0,0,calc(var(--cardA)*.22));border:1px solid var(--line);border-radius:calc(var(--u)*14px);
+  padding:calc(var(--u)*9px) calc(var(--u)*14px);display:grid;grid-template-rows:auto 1fr auto;row-gap:calc(var(--u)*2px);overflow:hidden}
+.ft.first{flex:1.3 1 0}
+.ft.dim{opacity:.45}
+.ft .top{display:flex;justify-content:space-between;align-items:flex-start;gap:calc(var(--u)*8px);min-height:calc(var(--u)*24px)}
+.ft .label{font-size:calc(var(--u)*15px);line-height:1.3}
+/* bandeau Champ tres plat : 2 lignes par tuile -> etiquette en haut, jauge + valeur (ou numero + proprietaire) en bas */
+.blk.flat[data-id=field]{padding:calc(var(--u)*6px) calc(var(--u)*8px)}
+.blk.flat[data-id=field] .ftiles{gap:calc(var(--u)*6px)}
+.blk.flat[data-id=field] .ft{grid-template-rows:auto 1fr;grid-template-columns:minmax(0,1fr) auto;column-gap:calc(var(--u)*8px);row-gap:0;
+  padding:calc(var(--u)*5px) calc(var(--u)*10px);align-items:center}
+.blk.flat[data-id=field] .ft.first{flex:1.7 1 0;grid-template-columns:auto minmax(0,1fr)}
+.blk.flat[data-id=field] #ftCulture{flex:1.3 1 0}
+.blk.flat[data-id=field] .ft .top{display:contents}
+.blk.flat[data-id=field] .ft .label{grid-row:1;grid-column:1/-1;font-size:calc(var(--u)*13px);font-weight:800;letter-spacing:.05em;line-height:1.35;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.blk.flat[data-id=field] .ft .fv{font-size:calc(var(--u)*23px);line-height:1.15}
+.blk.flat[data-id=field] .ft .top .fv{grid-row:2;grid-column:2;overflow:visible}
+.blk.flat[data-id=field] .ft .fv.mid{grid-row:2;grid-column:1/-1}
+.blk.flat[data-id=field] .ft .bar{grid-row:2;grid-column:1;height:calc(var(--u)*9px)}
+.blk.flat[data-id=field] .ft .sub{display:none}
+.blk.flat[data-id=field] .ft.first .fv.mid{grid-column:1}
+.blk.flat[data-id=field] .ft.first .sub{display:block;grid-row:2;grid-column:2;font-size:calc(var(--u)*13px);min-height:0;align-self:center}
+.ft .fv{font-size:calc(var(--u)*30px);line-height:1.15;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ft .top .fv{font-size:calc(var(--u)*26px);line-height:1}
+.ft .mid{align-self:center;min-width:0}
+.ft .sub{font-size:calc(var(--u)*16px);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:calc(var(--u)*19px)}
+.ft .sub b{color:var(--green);font-weight:700}
+.ft .bar{height:calc(var(--u)*12px);margin:0}
+.ft .bar i.warn{background:var(--amber)}.ft .bar i.bad{background:#ef5350}
+
+/* implements cote a cote quand la carte est tres plate */
+.blk.xwide[data-id=implements] .impls{flex-direction:row}
+.blk.xwide[data-id=implements] .impls .impl{flex:1 1 0;min-width:0}
+.blk.xwide[data-id=implements] .impls .impl .imgwrap{flex:0 0 36%}
+.blk.xwide[data-id=implements] .impls.single .impl .imgwrap{flex:0 0 32%}
+.blk.xwide[data-id=implements] .impls.single .impl .meta{display:grid;grid-template-columns:fit-content(55%) minmax(0,1fr);
+  grid-template-areas:"brand fills" "title fills" "icons fills";column-gap:calc(var(--u)*26px);align-items:center;align-content:center}
+.blk.xwide[data-id=implements] .impls.single .meta>.brandline{grid-area:brand}
+.blk.xwide[data-id=implements] .impls.single .meta>.title{grid-area:title}
+.blk.xwide[data-id=implements] .impls.single .meta>.icons{grid-area:icons}
+.blk.xwide[data-id=implements] .impls.single .meta>.fills{grid-area:fills;margin-top:0;align-self:center}
+
+/* cartes LARGES (bandeau OBS, ou carte etiree) : image a gauche, infos a droite */
+.blk.wide[data-id=vehicle]{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);
+  grid-template-areas:"img label" "img icons" "img brand" "img title" "img fills" "img stats";
+  grid-template-rows:auto auto auto auto auto 1fr;column-gap:calc(var(--u)*18px)}
+.blk.wide[data-id=vehicle]>.label{grid-area:label}
+.blk.wide[data-id=vehicle]>#vehIcons{grid-area:icons}
+.blk.wide[data-id=vehicle]>#vehWrap{grid-area:img;min-height:0}
+.blk.wide[data-id=vehicle]>.brandline{grid-area:brand;text-align:left}
+.blk.wide[data-id=vehicle]>.title{grid-area:title;text-align:left;font-size:calc(var(--u)*42px);white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.blk.wide[data-id=vehicle]>#vehFills{grid-area:fills}
+.blk.wide[data-id=vehicle]>.stats{grid-area:stats;align-self:end;gap:calc(var(--u)*8px);margin-top:calc(var(--u)*8px)}
+.blk.wide[data-id=vehicle] .stat{padding:calc(var(--u)*6px) calc(var(--u)*8px);justify-content:center}
+.blk.wide[data-id=vehicle] .stat .row{flex-direction:column;align-items:flex-start;gap:calc(var(--u)*2px)}
+.blk.wide[data-id=vehicle] .stat .label{letter-spacing:.04em}
+.blk.wide[data-id=vehicle]>.brandline{margin-top:calc(var(--u)*8px)}
+.blk.wide[data-id=vehicle] .stat .label{font-size:calc(var(--u)*12px);letter-spacing:.08em}
+.blk.wide[data-id=vehicle] .speed{font-size:calc(var(--u)*50px)}
+.blk.wide[data-id=vehicle] .speed small{font-size:calc(var(--u)*15px)}
+.blk.wide[data-id=vehicle] .big{font-size:calc(var(--u)*22px)}
+.blk.wide[data-id=vehicle] .sub{display:none}
+.blk.wide[data-id=vehicle] .bar{height:calc(var(--u)*10px);margin:calc(var(--u)*5px) 0}
+.blk.wide[data-id=vehicle] .ico{width:calc(var(--u)*40px);height:calc(var(--u)*40px)}
+.blk.wide[data-id=implements] .impls .impl{flex-direction:row;align-items:center;gap:calc(var(--u)*16px)}
+.blk.wide[data-id=implements] .impls .impl .imgwrap{flex:0 0 46%;height:100%}
+.blk.wide[data-id=implements] .impls .impl .meta{flex:1;min-width:0}
+.blk.wide[data-id=implements] .title{text-align:left;font-size:calc(var(--u)*36px);white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.blk.wide[data-id=implements] .brandline{text-align:left}
+.blk.wide[data-id=implements] .impl .icons{justify-content:flex-start}
+
+/* contenu des remorques / citernes / vehicule */
+.fills{display:flex;flex-wrap:wrap;gap:calc(var(--u)*6px) calc(var(--u)*16px);margin-top:calc(var(--u)*8px);flex-shrink:0}
+.fills:empty{display:none}
+.fill{flex:1 1 calc(var(--u)*260px);min-width:0;display:flex;align-items:center;gap:calc(var(--u)*10px)}
+.ficon{width:calc(var(--u)*40px);height:calc(var(--u)*40px);flex:none;display:flex;align-items:center;justify-content:center;font-size:calc(var(--u)*26px)}
+.ficon img{width:100%;height:100%;object-fit:contain}
+.ficon.noimg img{display:none}
+.fbody{flex:1;min-width:0}
+.frow{display:flex;justify-content:space-between;gap:10px;font-size:calc(var(--u)*21px);line-height:1.2}
+.fname{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fqty{color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.fill .bar{height:calc(var(--u)*11px);margin:calc(var(--u)*4px) 0 0}
+
+/* --- mini-carte des joueurs --- */
+.blk[data-id=radar]{padding:calc(var(--u)*12px);--mapA:1}
+/* transparence propre a la mini-carte (fond du bloc + image), les joueurs restent nets */
+.card.blk[data-id=radar]{background:linear-gradient(150deg,rgba(26,38,31,calc(var(--mapA)*.92)),rgba(16,23,19,calc(var(--mapA)*.92)));
+  border-color:rgba(44,61,51,clamp(0,calc(var(--mapA)*1.3),1)) !important}
+.blk[data-id=radar]>.label{opacity:clamp(.35,calc(var(--mapA)*1.5),1)}
+.mm{position:relative;flex:1;min-height:0;margin-top:calc(var(--u)*8px);border-radius:calc(var(--u)*14px);overflow:hidden}
+.mm::before{content:"";position:absolute;inset:0;opacity:var(--mapA);
+  background:#0b120e repeating-linear-gradient(0deg,#ffffff08 0 1px,transparent 1px 40px),repeating-linear-gradient(90deg,#ffffff08 0 1px,transparent 1px 40px)}
+.mmworld{position:absolute;left:0;top:0;transition:left 1s linear,top 1s linear,width .3s,height .3s}
+.mmworld img{width:100%;height:100%;display:block;filter:brightness(.82) saturate(.9);opacity:var(--mapA)}
+.mmworld img.err{display:none}
+.mmpins{position:absolute;inset:0;pointer-events:none}
+.mmfields{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.mmfields path{stroke:#0b120ecc;stroke-width:1.2;vector-effect:non-scaling-stroke;fill-opacity:calc(.88 * max(var(--mapA), .6));transition:fill .6s}
+.mmlegend{position:absolute;left:calc(var(--u)*8px);bottom:calc(var(--u)*8px);display:none;flex-wrap:wrap;gap:4px;max-width:calc(100% - 16px);pointer-events:none}
+.mmlegend.on{display:flex}
+.mmlayers{display:none;position:absolute;top:6px;left:6px;right:6px;z-index:6;flex-wrap:wrap;gap:4px}
+.edit .mmlayers{display:flex}
+.mmlayers a{padding:3px 9px;border-radius:999px;background:#0d1410e6;border:1px solid var(--line);color:var(--muted);font:700 11px "Segoe UI",Arial;cursor:pointer;user-select:none}
+.mmlayers a:hover{color:var(--text);border-color:#8fe45f99}
+.mmlayers a.cur{background:var(--green);border-color:var(--green);color:#0d1410}
+.mmlegend span{display:flex;align-items:center;gap:5px;background:#000000b8;color:#fff;border-radius:999px;padding:2px 8px;
+  font-size:max(11px,calc(var(--u)*13px));font-weight:700;white-space:nowrap}
+.mmlegend i{width:max(9px,calc(var(--u)*11px));height:max(9px,calc(var(--u)*11px));border-radius:3px;display:inline-block}
+.mmlegend .grad{width:max(60px,calc(var(--u)*90px));height:max(8px,calc(var(--u)*10px));border-radius:4px;display:inline-block}
+.pin{position:absolute;left:0;top:0;transition:transform 1s linear;will-change:transform}
+.pin .dot{position:absolute;left:0;top:0;width:max(14px,calc(var(--u)*22px));height:max(14px,calc(var(--u)*22px));transform:translate(-50%,-50%);
+  border-radius:50%;background:var(--c);border:max(2px,calc(var(--u)*3px)) solid #0b120e;box-shadow:0 0 0 2px #fffc,0 2px 8px #000a}
+.pin .arrow{position:absolute;left:0;top:0;width:max(26px,calc(var(--u)*40px));height:max(26px,calc(var(--u)*40px));transform:translate(-50%,-50%) rotate(var(--r,0deg));
+  transition:transform .6s;filter:drop-shadow(0 2px 4px #000c)}
+.pin .name{position:absolute;left:0;top:0;transform:translate(var(--lx,-50%),var(--ly,calc(max(10px,calc(var(--u)*16px)))));white-space:nowrap;
+  font-weight:800;font-size:max(12px,calc(var(--u)*17px));line-height:1.2;padding:1px calc(var(--u)*8px);border-radius:999px;
+  background:#000000b0;color:#fff;border:1px solid var(--c)}
+.pin.edge .dot{opacity:.75;box-shadow:0 0 0 2px #fff8}
+.mmnone{display:none;position:absolute;left:50%;bottom:calc(var(--u)*10px);transform:translateX(-50%);font-size:max(11px,calc(var(--u)*13px));color:var(--muted);
+  background:#000a;padding:2px 10px;border-radius:8px;white-space:nowrap}
+.mm.noimg .mmnone{display:block}
+
+/* --- mode edition --- */
+.handle{display:none;position:absolute;right:0;bottom:0;width:26px;height:26px;cursor:nwse-resize;z-index:5;
+  background:linear-gradient(135deg,transparent 50%,var(--green) 50%)}
+.tag{display:none;position:absolute;left:6px;top:4px;z-index:5;background:#000b;color:var(--green);
+  font:700 12px "Segoe UI",Arial;padding:2px 8px;border-radius:8px;letter-spacing:.06em;pointer-events:none}
+.edit .blk{outline:2px dashed #8fe45f88;outline-offset:-2px;cursor:move;user-select:none;touch-action:none}
+.edit .blk.off{opacity:.3}
+.edit .blk.hit{outline:3px solid #ff6b6b}
+.edit .handle,.edit .tag{display:block}
+/* reglage de transparence sur chaque bloc (mode edition) */
+.alphactl{display:none;position:absolute;left:6px;bottom:6px;z-index:7;align-items:center;gap:6px;background:#0d1410f0;border:1px solid var(--line);
+  border-radius:999px;padding:3px 8px 3px 4px;font:700 11px "Segoe UI",Arial;color:var(--text)}
+.edit .alphactl{display:flex}
+.alphactl b{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--green);font-size:14px}
+.alphactl input{display:none;width:90px;accent-color:#8fe45f}
+.alphactl span{display:none;min-width:34px;color:var(--muted);font-variant-numeric:tabular-nums}
+.alphactl.open input,.alphactl.open span{display:inline-block}
+/* 1.4.4 : en mode edition, le nom du bloc, le bouton Image et le ◐ n'apparaissent qu'au survol du bloc
+   (avant, ils cachaient le texte des petits blocs : remarque de Luxo, 25/10/2026) */
+.edit .blk .tag,.edit .blk .alphactl,.edit .blk .wmenu{opacity:0;pointer-events:none;transition:opacity .15s}
+.edit .blk:hover .tag{opacity:1}
+.edit .blk:hover .alphactl,.edit .blk:hover .wmenu,.edit .blk .alphactl.open,.edit .blk .wmenu.open{opacity:1;pointer-events:auto}
+
+#panel{display:none;position:fixed;right:14px;bottom:14px;z-index:50;width:290px;background:#0d1410f2;border:1px solid var(--green);
+  border-radius:14px;font:14px "Segoe UI",Arial;color:var(--text);box-shadow:0 10px 40px #000a;max-height:92vh;overflow:auto}
+.edit #panel{display:block}
+#panel header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-weight:700;color:var(--green);cursor:move;user-select:none;touch-action:none;
+  position:sticky;top:0;z-index:2;background:#0d1410;border-radius:14px 14px 0 0}
+#panel:not(.min) header{border-bottom:1px solid var(--line)}
+#panel.dragging{opacity:.85}
+#panel .body{padding:0 14px 12px}
+#panel.min .body{display:none}
+#panel h4{margin:10px 0 2px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+#panel label{display:flex;align-items:center;gap:10px;padding:4px 0;cursor:pointer}
+#panel input{accent-color:#8fe45f;width:16px;height:16px}
+#panel label.slider{cursor:default}
+#panel input[type=range]{flex:1 1 0;width:0;min-width:0;height:16px}
+#optAlphaVal{min-width:40px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+/* onglets */
+#panel .ptabs{display:flex;margin:0 -14px 4px;border-bottom:1px solid var(--line)}
+#panel .ptabs button{flex:1;background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);font-size:18px;padding:8px 0 5px;cursor:pointer;line-height:1.1}
+#panel .ptabs button small{display:block;font-size:10px;letter-spacing:.05em;margin-top:2px}
+#panel .ptabs button:hover{color:var(--text)}
+#panel .ptabs button.cur{color:var(--green);border-bottom-color:var(--green)}
+#panel .ptab[hidden]{display:none}
+/* tuiles des blocs */
+#panel .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+#panel label.tile{flex-direction:column;justify-content:center;gap:3px;padding:8px 4px;border:1px solid var(--line);border-radius:10px;text-align:center;
+  font-size:11px;line-height:1.15;color:var(--muted);min-height:64px;transition:background .15s,border-color .15s}
+#panel label.tile input{display:none}
+#panel label.tile b{font-size:20px;font-weight:400;filter:grayscale(1);opacity:.45}
+#panel label.tile:has(input:checked){border-color:var(--green);background:#8fe45f18;color:var(--text)}
+#panel label.tile:has(input:checked) b{filter:none;opacity:1}
+#panel label.tile:hover{border-color:#8fe45f99}
+#panel label.tile.locked{cursor:default}
+#panel label.tile .lock{font-style:normal;font-size:9.5px;color:var(--green);opacity:.85}
+/* interrupteurs */
+#panel label.sw{justify-content:space-between;padding:5px 0}
+#panel input.tgl{appearance:none;-webkit-appearance:none;width:34px;height:19px;border-radius:10px;background:#2c3d33;position:relative;flex-shrink:0;cursor:pointer;margin:0;transition:background .15s}
+#panel input.tgl::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:var(--muted);transition:left .15s,background .15s}
+#panel input.tgl:checked{background:var(--green)}
+#panel input.tgl:checked::after{left:17px;background:#0d1410}
+/* boutons a glisser dans OBS */
+#panel .obsdrag{display:flex;gap:6px;margin-top:6px}
+#panel .obsbtn{flex:1;text-align:center;padding:8px 2px;border:1px dashed var(--green);border-radius:10px;color:var(--text);text-decoration:none;
+  font-size:12px;font-weight:700;cursor:grab;background:#8fe45f12;user-select:none}
+#panel .obsbtn small{display:block;font-size:10px;font-weight:400;color:var(--muted);margin-top:2px}
+#panel .obsbtn:hover{background:#8fe45f2a}
+#panel .obsbtn:active{cursor:grabbing}
+#panel .obssize{display:flex;align-items:center;gap:4px;margin-top:6px;font-size:12px;color:var(--muted)}
+#panel .obssize a{padding:3px 9px;border-radius:7px;border:1px solid var(--line);color:var(--text);cursor:pointer;font-weight:700}
+#panel .obssize a.on{background:var(--green);color:#0d1a10;border-color:var(--green)}
+#panel .copybtn{margin-top:8px;width:100%;padding:7px;border-radius:8px;border:1px solid var(--line);background:#1b2a21;color:var(--text);font:600 12px "Segoe UI",Arial;cursor:pointer}
+#panel .copybtn:hover{border-color:var(--green)}
+#panel .obshelp{margin-top:6px}
+#panel .obshelp summary{cursor:pointer;color:var(--green);font-size:12px}
+/* pied */
+#panel .pfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+#panel #resetBtn{padding:6px 10px;border-radius:8px;border:1px solid #5a2f2f;background:none;color:#ff9a9a;font:600 12px "Segoe UI",Arial;cursor:pointer}
+#panel #resetBtn:hover{background:#5a2f2f55}
+.askbox{position:fixed;inset:0;z-index:200;background:#000b;display:flex;align-items:center;justify-content:center;font:14px "Segoe UI",Arial;color:var(--text)}
+.askcard{background:#0d1410;border:1px solid #5a2f2f;border-radius:14px;padding:18px 20px;width:min(380px,92vw);display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 50px #000c}
+.askt{font-size:18px}.askp{margin:0;color:var(--muted);line-height:1.5}
+.askbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+.askbtns button{padding:8px 14px;border-radius:9px;font:700 13px "Segoe UI",Arial;cursor:pointer}
+.askno{border:1px solid var(--line);background:none;color:var(--text)}
+.askok{border:1px solid #c44;background:#c44;color:#fff}
+#panel .hint a{color:var(--green)}
+#panel .hint{margin-top:8px;color:var(--muted);font-size:12px}
+/* 1.4.4 : dispositions enregistrees */
+#dispos{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+#dispos .slot{border:1px solid var(--line);border-radius:10px;background:#16221a;padding:7px 8px;display:flex;flex-direction:column;gap:6px}
+#dispos .slot.bk{border-style:dashed}
+#dispos .row{display:flex;align-items:center;gap:6px}
+#dispos .nm{font-weight:700;font-size:13px;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#dispos .dt{margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap}
+#dispos button{font:700 11px "Segoe UI",Arial;padding:4px 8px;border-radius:7px;border:1px solid var(--line);background:#1f2f25;color:var(--text);cursor:pointer;white-space:nowrap}
+#dispos button:hover{border-color:var(--green)}
+#dispos button.go{background:var(--green);color:#0d1a10;border-color:var(--green)}
+#dispos button.ren{padding:2px 6px}
+#panel .hint.links{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+#panel .hint .lk{display:inline-block;padding:6px 12px;border-radius:999px;font-weight:700;font-size:12px;text-decoration:none}
+#panel .hint .lk.dc{background:#1b1f44;border:1px solid #5865f2;color:#cdd2ff}
+#panel .hint .lk.don{background:#2c2412;border:1px solid #d9a84a;color:#f5c86e}
+#saved{color:var(--muted);font-size:12px}
+.seg{display:flex;gap:4px;margin-top:6px;padding:3px;border-radius:9px;background:#16231a}
+.seg a{flex:1;text-align:center;padding:6px 2px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:12px}
+.seg a:hover{color:var(--text)}
+.seg a.cur{background:var(--green);color:#0d1410;font-weight:700}
+#note{color:var(--amber);font-size:12px;min-height:16px;margin-top:4px}
+
+.status{position:fixed;left:12px;bottom:6px;font-size:13px;color:var(--muted);display:none;align-items:center;gap:6px;z-index:40}
+.status.show{display:flex}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--amber)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <clipPath id="icoClipL"><rect x="12" y="18" width="8" height="14"/></clipPath>
+  <clipPath id="icoClipR"><rect x="20" y="18" width="8" height="14"/></clipPath>
+</defs></svg>
+<div class="blk brand" data-id="brand"><svg class="bglyph" viewBox="44 48 422 330" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"><rect x="58" y="62" width="300" height="210" rx="22"/><line x1="208" y1="272" x2="208" y2="306"/><line x1="160" y1="318" x2="256" y2="318"/></g><g transform="translate(176 192) scale(.95)"><g fill="currentColor"><path d="M-70 4 V-26 a6 6 0 0 1 6-6 H-34 V-66 a6 6 0 0 1 6-6 H10 a6 6 0 0 1 5.7 4.2 L26 -32 H48 a8 8 0 0 1 7.6 5.5 L64 -2 V12 H-70Z"/><rect x="-10" y="-86" width="7" height="16" rx="3"/><path d="M-24 -62 H4 L12 -36 H-24Z" fill="#0b120e"/></g><circle cx="-32" cy="16" r="34" fill="#0b120e" stroke="currentColor" stroke-width="12"/><circle cx="-32" cy="16" r="9" fill="currentColor"/><circle cx="46" cy="26" r="22" fill="#0b120e" stroke="currentColor" stroke-width="10"/><circle cx="46" cy="26" r="6" fill="currentColor"/></g><g transform="translate(300 100)"><rect x="-40" y="-16" width="80" height="32" rx="16" fill="#0b120e" stroke="currentColor" stroke-width="4"/><circle cx="-20" cy="0" r="7" fill="#e5322d"/><text x="9" y="7" text-anchor="middle" font-family="Segoe UI,Arial" font-weight="900" font-size="19" fill="currentColor">LIVE</text></g><g transform="translate(330 150)"><rect x="0" y="0" width="122" height="214" rx="22" fill="#0b120e" stroke="currentColor" stroke-width="13"/><rect x="20" y="28" width="82" height="58" rx="6" fill="#9bd636" opacity=".9"/><rect x="20" y="96" width="38" height="40" rx="6" fill="#e8962a"/><rect x="64" y="96" width="38" height="40" rx="6" fill="#5fae4a"/><path d="M48 160 l14 -26 l14 26 l-14 -8z" fill="currentColor"/><rect x="44" y="190" width="34" height="6" rx="3" fill="currentColor"/></g></svg>
+  <div class="btxt"><h1>STREAM <b>&amp; COMPANION</b></h1><small><i></i>FS25 · by leluxo</small></div></div>
+
+<div class="blk card center chip" data-id="map"><span class="label">Carte</span><span class="val" id="map">—</span></div>
+<div class="blk card center chip" data-id="clock"><span class="label" id="dayLabel">Jour</span><span class="val"><span id="clock">—</span><span class="tsc" id="timeScale"></span></span></div>
+<div class="blk card center chip" data-id="weather"><span class="label">Météo</span><span class="val" id="weather">—</span><div class="fc none" id="forecast" data-part="forecast"></div></div>
+<div class="blk card center chip" data-id="money"><span class="label">Argent</span><span class="val" id="money">—</span></div>
+<div class="blk card center chip" data-id="hours"><span class="label">Heures de jeu</span><span class="val" id="hours">—</span></div>
+
+<section class="blk card" data-id="vehicle">
+  <div class="label">Véhicule contrôlé</div>
+  <div class="icons none" id="vehIcons"><div class="ig" id="vehIconsMain"></div><div class="ig alerts" id="vehIconsAlerts"></div></div>
+  <div class="imgwrap noimg" id="vehWrap"><img id="vehImg" alt=""><span class="ph">🚜</span>
+    <svg class="scene" id="scene" viewBox="0 0 680 300" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <rect id="sc-sky" x="-3000" y="-3000" width="6680" height="6000" fill="#6fb0e8"/>
+      <g id="sc-stars" fill="#f3f7f2"></g>
+      <circle id="sc-sun" cx="340" cy="60" r="22" fill="#f5c04a"/>
+      <circle id="sc-moon" cx="340" cy="60" r="17" fill="#e8ecef"/>
+      <circle id="sc-cut" cx="347" cy="56" r="15" fill="#0a1020"/>
+      <g id="sc-far" fill="#3f7a45" stroke="#3f7a45" stroke-width="1.5"><path transform="translate(-2720)" d="M0 215 Q120 170 260 205 T520 195 T680 215 V3000 H0 Z"/><path transform="translate(-2040)" d="M0 215 Q120 170 260 205 T520 195 T680 215 V3000 H0 Z"/><path transform="translate(-1360)" d="M0 215 Q120 170 260 205 T520 195 T680 215 V3000 H0 Z"/><path transform="translate(-680)" d="M0 215 Q120 170 260 205 T520 195 T680 215 V3000 H0 Z"/><path transform="translate(0)" d="M0 215 Q120 170 260 205 T520 195 T680 215 V3000 H0 Z"/><path transform="translate(680)" d="M0 215 Q120 170 260 205 T520 195 T680 215 V3000 H0 Z"/><path transform="translate(1360)" d="M0 215 Q120 170 260 205 T520 195 T680 215 V3000 H0 Z"/><path transform="translate(2040)" d="M0 215 Q120 170 260 205 T520 195 T680 215 V3000 H0 Z"/><path transform="translate(2720)" d="M0 215 Q120 170 260 205 T520 195 T680 215 V3000 H0 Z"/></g>
+      <g id="sc-farm" fill="#244a2c">
+        <rect x="468" y="160" width="86" height="48"/><path d="M458 162 L511 126 L564 162 Z"/>
+        <rect x="572" y="132" width="24" height="76"/><path d="M572 132 Q584 112 596 132 Z"/>
+        <circle cx="416" cy="178" r="22"/><rect x="412" y="190" width="8" height="20"/>
+        <circle cx="380" cy="186" r="16"/><rect x="376" y="196" width="8" height="14"/>
+      </g>
+      <g id="sc-lights" fill="#f5c04a" opacity="0"><rect x="490" y="176" width="14" height="16" rx="2"/><rect x="518" y="176" width="14" height="16" rx="2"/><rect x="505" y="146" width="12" height="12" rx="2"/></g>
+      <g id="sc-near" fill="#2f5f36" stroke="#2f5f36" stroke-width="1.5"><path transform="translate(-2720)" d="M0 245 Q200 225 400 240 T680 245 V3000 H0 Z"/><path transform="translate(-2040)" d="M0 245 Q200 225 400 240 T680 245 V3000 H0 Z"/><path transform="translate(-1360)" d="M0 245 Q200 225 400 240 T680 245 V3000 H0 Z"/><path transform="translate(-680)" d="M0 245 Q200 225 400 240 T680 245 V3000 H0 Z"/><path transform="translate(0)" d="M0 245 Q200 225 400 240 T680 245 V3000 H0 Z"/><path transform="translate(680)" d="M0 245 Q200 225 400 240 T680 245 V3000 H0 Z"/><path transform="translate(1360)" d="M0 245 Q200 225 400 240 T680 245 V3000 H0 Z"/><path transform="translate(2040)" d="M0 245 Q200 225 400 240 T680 245 V3000 H0 Z"/><path transform="translate(2720)" d="M0 245 Q200 225 400 240 T680 245 V3000 H0 Z"/></g>
+      <g id="sc-rows" stroke="#3f7a45" stroke-width="2" fill="none">
+        <path transform="translate(-2720)" d="M0 262 Q200 244 400 258 T680 262"/><path transform="translate(-2720)" d="M0 278 Q200 262 400 274 T680 278"/><path transform="translate(-2040)" d="M0 262 Q200 244 400 258 T680 262"/><path transform="translate(-2040)" d="M0 278 Q200 262 400 274 T680 278"/><path transform="translate(-1360)" d="M0 262 Q200 244 400 258 T680 262"/><path transform="translate(-1360)" d="M0 278 Q200 262 400 274 T680 278"/><path transform="translate(-680)" d="M0 262 Q200 244 400 258 T680 262"/><path transform="translate(-680)" d="M0 278 Q200 262 400 274 T680 278"/><path transform="translate(0)" d="M0 262 Q200 244 400 258 T680 262"/><path transform="translate(0)" d="M0 278 Q200 262 400 274 T680 278"/><path transform="translate(680)" d="M0 262 Q200 244 400 258 T680 262"/><path transform="translate(680)" d="M0 278 Q200 262 400 274 T680 278"/><path transform="translate(1360)" d="M0 262 Q200 244 400 258 T680 262"/><path transform="translate(1360)" d="M0 278 Q200 262 400 274 T680 278"/><path transform="translate(2040)" d="M0 262 Q200 244 400 258 T680 262"/><path transform="translate(2040)" d="M0 278 Q200 262 400 274 T680 278"/><path transform="translate(2720)" d="M0 262 Q200 244 400 258 T680 262"/><path transform="translate(2720)" d="M0 278 Q200 262 400 274 T680 278"/>
+        <path d="M-3000 296 H3680"/><path d="M-3000 318 H3680"/><path d="M-3000 344 H3680"/><path d="M-3000 374 H3680"/>
+        <path d="M-3000 408 H3680"/><path d="M-3000 446 H3680"/><path d="M-3000 488 H3680"/><path d="M-3000 534 H3680"/>
+        <path d="M-3000 584 H3680"/><path d="M-3000 640 H3680"/><path d="M-3000 700 H3680"/><path d="M-3000 766 H3680"/>
+      </g>
+    </svg></div>
+  <div class="brandline" id="vehBrand"></div>
+  <div class="title" id="vehName">En attente…</div>
+  <div class="fills" id="vehFills" data-part="contents"></div>
+  <div class="stats" id="stats">
+    <div class="stat sp" data-part="speed"><div class="label">Vitesse</div>
+      <div class="speed"><span id="speed">0.0</span><small>km/h</small></div></div>
+    <div class="stat" data-part="fuel"><div class="row"><div class="label">Carburant</div><div class="big" id="fuelPct">—</div></div>
+      <div class="bar"><i id="fuelBar"></i></div><div class="sub" id="fuelTxt">&nbsp;</div></div>
+    <div class="stat" data-part="condition"><div class="row"><div class="label">État</div><div class="big" id="condPct">—</div></div>
+      <div class="bar"><i id="condBar"></i></div></div>
+  </div>
+</section>
+
+<section class="blk card" data-id="implements">
+  <div class="label">Outil(s) / remorque(s)</div>
+  <div class="impls" id="impls"><div class="none">Aucun outil détecté</div></div>
+</section>
+
+<div class="capmodal" id="capModal">
+  <div class="capbox">
+    <div class="caphead"><span id="capTitle">Capturer une image depuis le jeu</span><button type="button" id="capClose">✕ Fermer</button></div>
+    <div class="capstage"><video id="capVideo" autoplay muted playsinline></video><canvas id="capCanvas" hidden></canvas><div id="capSel"></div></div>
+    <div class="capbar">
+      <button type="button" id="capShot">📸 Prendre la photo</button>
+      <button type="button" id="capRetake" hidden>↺ Reprendre</button>
+      <button type="button" id="capSave" hidden>✓ Enregistrer</button>
+      <span class="hint" id="capHint"></span>
+    </div>
+  </div>
+</div>
+
+<section class="blk card" data-id="radar">
+  <div class="label">Carte des joueurs</div>
+  <div class="mm" id="mm"><div class="mmworld" id="mmWorld"><img id="mmImg" alt=""><svg class="mmfields" id="mmFields" preserveAspectRatio="none"></svg></div>
+    <div class="mmlegend" id="mmLegend"></div>
+    <div class="mmlayers" id="mmLayers"><a data-layer="0">Aucune</a><a data-layer="2">Cultures</a><a data-layer="1">Croissance</a><a data-layer="3">Composition</a></div><div class="mmpins" id="mmPins"></div>
+    <div class="mmnone" id="mmNone">Image de la carte introuvable (voir Aide)</div></div>
+</section>
+<section class="blk card" data-id="field">
+  <div class="ftiles" id="fieldTiles">
+    <div class="ft first" id="ftChamp"><div class="top"><div class="label">Champ</div></div><div class="fv mid" id="fNum">—</div><div class="sub" id="fArea">&nbsp;</div></div>
+    <div class="ft" id="ftCulture"><div class="top"><div class="label">Culture</div></div><div class="fv mid" id="fFruit">—</div><div class="sub" id="fFruitSub">&nbsp;</div></div>
+    <div class="ft" id="ftGrowth"><div class="top"><div class="label">Croissance</div><div class="fv" id="fGrowthPct">—</div></div><div class="bar mid"><i id="fGrowthBar"></i></div><div class="sub" id="fGrowthTxt">&nbsp;</div></div>
+    <div class="ft" id="ftSpray"><div class="top"><div class="label">Fertilisation</div><div class="fv" id="fSpray">—</div></div><div class="bar mid"><i id="fSprayBar"></i></div><div class="sub" id="fSprayTxt">&nbsp;</div></div>
+    <div class="ft" id="ftLime"><div class="top"><div class="label">Chaux</div><div class="fv" id="fLime">—</div></div><div class="bar mid"><i id="fLimeBar"></i></div><div class="sub" id="fLimeTxt">&nbsp;</div></div>
+    <div class="ft" id="ftPlow" style="display:none"><div class="top"><div class="label">Labour</div><div class="fv" id="fPlow">—</div></div><div class="bar mid"><i id="fPlowBar"></i></div><div class="sub" id="fPlowTxt">&nbsp;</div></div>
+  </div>
+</section>
+
+<div id="panel" class="min">
+  <header id="panelHead" title="Clic : ouvrir / réduire — glisser : déplacer"><span>✥ Mode édition</span><span id="panelToggle">▸</span></header>
+  <div class="body">
+    <nav class="ptabs">
+      <button type="button" data-tab="disp">🖥️<small>Disposition</small></button>
+      <button type="button" data-tab="blocs">🧩<small>Blocs</small></button>
+      <button type="button" data-tab="style">🎨<small>Style</small></button>
+      <button type="button" data-tab="aide">❔<small>Aide</small></button>
+    </nav>
+    <section class="ptab" data-tab="disp">
+      <h4>Disposition</h4>
+      <div class="hint" id="profileInfo"></div>
+      <div class="hint">Glisse un bloc pour le déplacer, tire le coin vert pour l'agrandir. Survole un bloc pour voir ses boutons.</div>
+      <h4>Mes dispositions</h4>
+      <div id="dispos"></div>
+      <h4>Ajouter dans OBS</h4>
+      <div class="obsdrag">
+        <a class="obsbtn" id="obsBtn" draggable="true" data-q="?" data-w="1920" data-h="1080">🎬 FS25 Stream &amp; Companion<small id="obsSize">glisse-moi dans OBS · 1920×1080</small></a>
+      </div>
+      <div class="obssize">Ta scène OBS : <a data-res="1920x1080">Full HD</a><a data-res="2560x1440">2K</a></div>
+      <div class="hint">Glisse le bouton sur l'aperçu d'OBS.</div>
+      <button type="button" class="copybtn" id="copyUrl">📋 Copier l'adresse</button>
+      <details class="obshelp"><summary>Ça ne glisse pas ?</summary>
+        <div class="hint">• OBS lancé <b>en administrateur</b> bloque le glisser : relance-le normalement.<br>
+        • Lâche bien le bouton <b>sur l'aperçu</b> (l'image au centre d'OBS).<br>
+        • Ou à la main : Sources → <b>+</b> → <b>Navigateur</b>, colle l'adresse, largeur <b>1920</b> et hauteur <b>1080</b> (en 2K : <b>2560</b> × <b>1440</b>).</div></details>
+    </section>
+    <section class="ptab" data-tab="blocs" hidden>
+      <h4>Clique pour afficher / masquer</h4>
+      <div id="checks" class="tiles"></div>
+      <div class="hint">Le logo / titre reste toujours affiché : déplace-le, agrandis-le ou rends-le plus transparent (◐) directement sur l'écran.</div>
+    </section>
+    <section class="ptab" data-tab="style" hidden>
+      <h4>Fond des blocs (par défaut)</h4>
+      <label class="slider">Opacité <input type="range" id="optAlpha" min="0" max="100" step="1" value="92"><span id="optAlphaVal">92 %</span></label>
+      <h4>Mini-carte</h4>
+      <div class="seg" id="mapModeSeg"><a href="#" data-mode="0">Carte entière</a><a href="#" data-mode="1">Suit le joueur</a></div>
+      <div class="seg" id="mapLayerSeg" style="flex-wrap:wrap"><a href="#" data-layer="0">Aucune</a><a href="#" data-layer="2">Cultures</a><a href="#" data-layer="1">Croissance</a><a href="#" data-layer="3">Composition</a></div>
+      <label class="slider" id="mapZoomRow">Zoom <input type="range" id="optMapZoom" min="0" max="100" step="1" value="30"><span id="optMapZoomVal">400 m</span></label>
+      <label class="slider">Opacité <input type="range" id="optMapAlpha" min="0" max="100" step="1" value="100"><span id="optMapAlphaVal">100 %</span></label>
+      <label class="sw">Afficher seulement moi<input type="checkbox" class="tgl" id="optMapSelf"></label>
+      <h4>Dans les cartes</h4>
+      <div id="partChecks"></div>
+      <h4>Autres</h4>
+      <label class="sw">Retirer le fond uni des images<input type="checkbox" class="tgl" id="optBg" checked></label>
+      <label class="sw">Alertes toujours visibles<input type="checkbox" class="tgl" id="optAlerts"></label>
+      <label class="sw">Garder les modules hors partie<input type="checkbox" class="tgl" id="optIdle"></label>
+    </section>
+    <section class="ptab" data-tab="aide" hidden>
+      <div class="hint"><b>Déplacer / agrandir :</b> glisse un bloc, tire son coin vert. Un bloc posé sur un autre échange sa place avec lui.</div>
+      <div class="hint"><b>Changer une image :</b> menu « 🖼 Image » sur la photo. « 🔎 Google » ouvre Google Images (PNG transparents) avec la recherche prête : enregistre l'image puis glisse-la sur la photo. Tu peux aussi glisser un fichier ou une image d'un site. « ↩ Image d'origine » remet l'image du jeu.</div>
+      <div class="hint"><b>Mini-carte :</b> active-la dans l'onglet Blocs (📍). Si l'image de la map n'est pas trouvée, fais une capture de la carte du jeu (vue entière, nord en haut) et enregistre-la sous <i>carte.png</i> dans le dossier images_perso.</div>
+      <div class="hint"><b>Transparence d'un bloc :</b> clique sur ◐ en bas à gauche du bloc. Le réglage de l'onglet Style sert pour les blocs que tu n'as pas réglés.</div>
+      <div class="hint"><b>OBS :</b> les changements sont repris tout seuls en ~2 secondes.</div>
+      <div class="hint"><b>Un souci ?</b> <a href="/diag" target="_blank">Ouvre le diagnostic</a>.</div>
+      <div class="hint links"><a href="https://discord.gg/xhsWj2e5z3" target="_blank" rel="noopener" class="lk dc">💬 Discord</a><a href="https://ko-fi.com/leluxo" target="_blank" rel="noopener" class="lk don">☕ Soutenir le projet</a></div>
+      <div class="hint">Questions, idées, bugs : rejoins le Discord « La Ferme à Luxo ». L'app est gratuite ; un petit don aide à la faire vivre.</div>
+    </section>
+    <div class="pfoot"><span id="saved">&nbsp;</span><button type="button" id="resetBtn">↺ Réinitialiser</button></div>
+    <div id="note"></div>
+  </div>
+</div>
+<div class="status" id="statusBox"><span class="dot" id="dot"></span><span id="status">En attente du jeu…</span></div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const EDIT = params.has('edit');
+if (EDIT) document.title = 'Mode édition · FS25 Stream & Companion';   // 1.4.4 : titre reconnu par l'app (fenetre deja ouverte)
+// une seule disposition : 1920x1080, fond transparent, modules places librement
+// (les anciennes adresses ?transparent, ?aspect=..., ?layout=libre menent toutes ici)
+const LAYOUT_PARAM = 'libre';
+if (!EDIT) document.body.classList.add('transparent');
+if (EDIT) document.body.classList.add('edit');
+
+// x,y,w,h en % de l'ecran (defaut pense pour 1920x1080) ; ref = taille de reference pour l'echelle du texte (px).
+const BLOCKS = [
+  // def = disposition "plein ecran" ; strip = disposition "bandeau" (page tres large, ex. source OBS 1920x360)
+  {id:'brand',      name:'Logo / titre',   ref:[520,92],  refStrip:[440,92], def:{x:1.2,  y:1.8, w:21.5, h:8.5}, strip:{x:87.7, y:67, w:11.7, h:30}},
+  {id:'map',        name:'Nom de la carte',          ref:[280,92],  refStrip:[330,92], def:{x:23.3, y:1.8, w:14.6, h:8.5}, strip:{x:75,   y:3,  w:12.1, h:30}},
+  {id:'clock',      name:'Jour / heure',   ref:[280,92],  refStrip:[330,92], def:{x:38.5, y:1.8, w:14.6, h:8.5}, strip:{x:87.7, y:3,  w:11.7, h:30}},
+  {id:'weather',    name:'Météo',          ref:[280,92],  refStrip:[330,92], def:{x:53.7, y:1.8, w:14.6, h:8.5}, strip:{x:75,   y:35, w:12.1, h:30}},
+  {id:'money',      name:'Argent',         ref:[280,92],  refStrip:[330,92], def:{x:68.9, y:1.8, w:14.6, h:8.5}, strip:{x:87.7, y:35, w:11.7, h:30}},
+  {id:'hours',      name:'Heures de jeu',  ref:[280,92],  refStrip:[330,92], def:{x:84.1, y:1.8, w:14.6, h:8.5}, strip:{x:75,   y:67, w:12.1, h:30}},
+  {id:'vehicle',    name:'Véhicule',       ref:[925,800], refWide:[800,330], def:{x:1.2,  y:12,  w:48.2, h:71.5}, strip:{x:0.6,  y:3, w:36.6, h:94}},
+  {id:'implements', name:'Outils / remorques', ref:[925,800], refWide:[800,330], refXWide:[1000,230], def:{x:50.6, y:12, w:48.2, h:71.5}, strip:{x:37.8, y:3, w:36.6, h:94}},
+  {id:'field',      name:'Champ',          ref:[1800,140], refStrip:[1800,140], def:{x:1.2, y:85, w:97.6, h:12.8},
+    strip:{x:0.6, y:3, w:73.8, h:30, visible:false}, free:{x:0.6, y:56.5, w:73.8, h:10}},
+  {id:'radar',      name:'Mini-carte',     ref:[520,560], refStrip:[520,560], def:{x:74, y:50, w:24, h:33, visible:false},
+    strip:{x:75, y:3, w:12, h:60, visible:false}, free:{x:80, y:3, w:18.5, h:33, visible:false}},
+];
+BLOCKS.forEach(b => { if (b.strip && !b.free){                      // libre = bandeau dans le tiers inferieur d'un ecran 16:9
+  b.free = {x:b.strip.x, y:+(66.7 + b.strip.y / 3).toFixed(2), w:b.strip.w, h:+(b.strip.h / 3).toFixed(2)};
+  if (b.strip.visible === false) b.free.visible = false;
+} });
+// Elements affichables dans les cartes (pas de position : seulement visibles ou non).
+const PARTS = [
+  {id:'speed',     name:'Vitesse'},
+  {id:'fuel',      name:'Carburant'},
+  {id:'condition', name:'État'},
+  {id:'contents',  name:'Contenu des réservoirs'},
+  {id:'badges',    name:'Voyants du véhicule'},
+  {id:'toolbadges',name:'Voyants des outils'},
+  {id:'alerts',    name:'Alertes (carburant, état)'},
+  {id:'forecast',  name:'Prévisions météo'},
+];
+const $ = id => document.getElementById(id);
+const els = {};
+BLOCKS.forEach(b => els[b.id] = document.querySelector('.blk[data-id="'+b.id+'"]'));
+
+// Scene : toute la fenetre, ou (?aspect=1920x360) une zone au format voulu pour regler le bandeau dans Chrome.
+const stage = document.createElement('div'); stage.id = 'stage';
+document.body.insertBefore(stage, els.brand);
+BLOCKS.forEach(b => stage.appendChild(els[b.id]));
+const aspectMatch = EDIT ? /^(\d+)x(\d+)$/.exec('1920x1080') : null;          // mode edition : apercu 16:9
+const stageAspect = () => aspectMatch ? (+aspectMatch[1]) / (+aspectMatch[2]) : innerWidth / innerHeight;
+const profile = () => 'libre';
+const K = id => ({strip:'strip_', libre:'free_', main:''}[profile()]) + id;     // cle d'enregistrement de la disposition
+function fitStage(){
+  if (!aspectMatch){ stage.className = ''; Object.assign(stage.style, {left:'0', top:'0', width:'100%', height:'100%'}); return; }
+  const r = stageAspect(); let w = innerWidth, h = w / r;
+  if (h > innerHeight){ h = innerHeight; w = h * r; }
+  stage.className = 'fixed';
+  Object.assign(stage.style, {left:((innerWidth - w) / 2) + 'px', top:((innerHeight - h) / 2) + 'px', width:w + 'px', height:h + 'px'});
+}
+fitStage();
+
+/* ---------------------------------------------------------------- mise en page */
+let layout = {};                       // surcharges enregistrees : {id:{x,y,w,h,visible}}
+function geo(id){
+  const b = BLOCKS.find(b => b.id === id);
+  const p = profile(), base = (p === 'strip' && b.strip) ? b.strip : (p === 'libre' && b.free) ? b.free : b.def;
+  const g = Object.assign({visible:true}, base, layout[K(id)] || {});
+  if (id === 'brand'){                                         // le logo / titre reste toujours affiche (pub), taille mini lisible
+    g.visible = true; g.w = Math.max(BRAND_MIN.w, g.w); g.h = Math.max(BRAND_MIN.h, g.h);
+  }
+  return g;
+}
+const BRAND_MIN = {w:10, h:5};                                  // en % de l'ecran
+const BRAND_ALPHA_MIN = 40;                                     // transparence du logo : jamais en dessous de 40 %
+const partVisible = id => !(layout[id] && layout[id].visible === false);
+function applyParts(){
+  PARTS.forEach(p => document.querySelectorAll('[data-part="'+p.id+'"]')
+    .forEach(el => el.classList.toggle('partoff', !partVisible(p.id))));
+  $('stats').classList.toggle('partoff', ['speed','fuel','condition'].every(id => !partVisible(id)));
+}
+function applyBlock(b){
+  const g = geo(b.id), el = els[b.id];
+  el.style.left = g.x + '%'; el.style.top = g.y + '%';
+  el.style.width = g.w + '%'; el.style.height = g.h + '%';
+  el.classList.toggle('off', !g.visible);
+  el.style.display = (!g.visible && !EDIT) ? 'none' : '';
+  rescale(b);
+}
+function rescale(b){
+  const el = els[b.id];
+  const wide = el.offsetWidth / Math.max(1, el.offsetHeight) > 1.45;      // carte etiree : disposition horizontale
+  el.classList.toggle('wide', wide);
+  const xwide = el.offsetWidth / Math.max(1, el.offsetHeight) > 2.6;      // carte tres plate : outils cote a cote
+  el.classList.toggle('xwide', xwide);
+  let ref = (profile() !== 'main' && b.refStrip) ? b.refStrip : (xwide && b.refXWide) ? b.refXWide : (wide && b.refWide) ? b.refWide : b.ref;
+  if (b.id === 'field'){                                   // bandeau Champ tres plat : on masque la ligne du bas et on grossit le texte
+    const flat = el.offsetHeight < 120;
+    el.classList.toggle('flat', flat);
+    if (flat) ref = [1050, 64];
+  }
+  if (b.id === 'implements'){                              // plusieurs outils : lignes empilees (cartes larges) ou colonnes (cartes plates)
+    const n = Math.max(1, els.implements.querySelectorAll('.impl').length);
+    if (xwide) ref = [Math.max(700, 500 * n), ref[1]];
+    else if (wide) ref = [ref[0], ref[1] * (1 + (n - 1) * 0.55)];
+  }
+  const s = Math.min(el.offsetWidth / ref[0], el.offsetHeight / ref[1]);
+  if (isFinite(s) && s > 0) el.style.setProperty('--u', s.toFixed(3));
+  if (b.id === 'implements') requestAnimationFrame(() => { fitImplements(); fitTitles(els.implements); });
+  if (b.id === 'brand') requestAnimationFrame(fitBrand);
+  if (b.id === 'vehicle') requestAnimationFrame(() => { fitBlock(els.vehicle); fitTitles(els.vehicle); });
+}
+// 1.4.4 : nom trop long (coupe par « … ») : on reduit sa police (jusqu'a 60 %) pour qu'il tienne en entier
+function fitTitles(root){
+  if (!root) return;
+  root.querySelectorAll('.title').forEach(t => {
+    t.style.fontSize = '';
+    const base = parseFloat(getComputedStyle(t).fontSize) || 0;
+    let sz = base;
+    for (let i = 0; i < 10 && sz > base * 0.6 && (t.scrollHeight > t.clientHeight + 1 || t.scrollWidth > t.clientWidth + 1); i++){
+      sz *= 0.92; t.style.fontSize = sz.toFixed(1) + 'px';
+    }
+  });
+}
+// logo / titre : si le texte deborde du bloc (bloc etroit, police plus large), on reduit l'echelle jusqu'a ce qu'il tienne
+// un bloc dont le contenu deborde (nom long, petite carte) : on reduit son echelle jusqu'a ce que tout tienne
+function fitBlock(el){
+  if (!el || el.style.display === 'none') return;
+  for (let i = 0; i < 5; i++){
+    const needH = el.scrollHeight, roomH = el.clientHeight, need = el.scrollWidth, room = el.clientWidth;
+    if (needH <= roomH + 1 && need <= room + 1) break;
+    const u = parseFloat(el.style.getPropertyValue('--u')) || 1;
+    if (u < 0.25) break;
+    el.style.setProperty('--u', (u * Math.max(0.6, Math.min(roomH / needH, room / need)) * 0.98).toFixed(3));
+  }
+}
+let lastVehName = null;
+function fitBrand(){
+  const el = els.brand; if (!el) return;
+  for (let i = 0; i < 4; i++){
+    const need = el.scrollWidth, room = el.clientWidth, needH = el.scrollHeight, roomH = el.clientHeight;
+    if (need <= room + 1 && needH <= roomH + 1) break;
+    const u = parseFloat(el.style.getPropertyValue('--u')) || 1;
+    el.style.setProperty('--u', (u * Math.min(room / need, roomH / needH) * 0.97).toFixed(3));
+  }
+}
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { try{ rescale(BLOCKS.find(b => b.id === 'brand')); }catch(e){} });
+function updateProfileInfo(){
+  const el = document.getElementById('profileInfo'); if (!el) return;
+  el.textContent = 'Format 16:9 (1920×1080, 2560×1440…), fond transparent.';
+}
+// Si le texte d'un outil depasse sa case (nom long, carte etroite), on reduit sa taille (zoom) jusqu'a ce qu'il tienne.
+function fitImplements(){
+  const blk = els.implements; if (!blk || getComputedStyle(blk).display === 'none') return;
+  const metas = [...blk.querySelectorAll('.impl')].map(impl => ({impl, meta: impl.querySelector('.meta')})).filter(x => x.meta);
+  metas.forEach(x => { x.meta.style.zoom = ''; });
+  let zoom = 1;
+  metas.forEach(({impl, meta}) => {                         // taille la plus petite necessaire : identique pour tous les outils
+    const cs = getComputedStyle(impl), avail = impl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    if (!(avail > 0)) return;
+    let z = 1;
+    while (meta.getBoundingClientRect().height > avail + 1 && z > 0.45){ z = Math.round((z - 0.05) * 100) / 100; meta.style.zoom = z; }   // BCR tient compte du zoom (offsetHeight non)
+    meta.style.zoom = '';
+    zoom = Math.min(zoom, z);
+  });
+  if (zoom < 1) metas.forEach(x => { x.meta.style.zoom = zoom; });
+}
+function cardAlpha(){ const v = layout.cardalpha && layout.cardalpha.x; return typeof v === 'number' ? Math.max(0, Math.min(100, v)) : 92; }
+function applyAlpha(){
+  const a = cardAlpha();
+  document.documentElement.style.setProperty('--cardA', (a / 100).toFixed(2));
+  document.body.classList.toggle('lowbg', a < 40);
+  if ($('optAlpha')){ $('optAlpha').value = a; $('optAlphaVal').textContent = Math.round(a) + ' %'; }
+}
+/* ---------------------------------------------------------------- mini-carte */
+const PIN_COLORS = ['#4fc3f7', '#ffb74d', '#f06292', '#ba68c8', '#fff176', '#4db6ac', '#ff8a65', '#90caf9'];
+const pinColor = name => { let h = 0; for (const c of String(name)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return PIN_COLORS[h % PIN_COLORS.length]; };
+const mapMode = () => (layout.mapmode && layout.mapmode.x === 1) ? 'follow' : 'full';
+const mapRadius = () => 100 + ((layout.mapzoom && typeof layout.mapzoom.x === 'number') ? layout.mapzoom.x : 30) * 10;   // 100 a 1100 m
+const mapSelfOnly = () => !!(layout.mapself && layout.mapself.visible === true);
+const ARROW_SVG = '<svg viewBox="0 0 40 40"><path d="M20 3 L34 35 L20 27 L6 35 Z" fill="#8fe45f" stroke="#0b120e" stroke-width="3" stroke-linejoin="round"/></svg>';
+let radarKey = null;
+/* --- couches de champs sur la mini-carte --- */
+const mapLayer = () => (layout.maplayer && typeof layout.maplayer.x === 'number') ? Math.min(3, Math.round(layout.maplayer.x)) : 0;   // 4 (ancienne couche Chaux) -> Composition
+let fieldShapes = null, fieldShapesAt = 0, fieldShapesKey = null, fieldShapesBusy = false;
+function loadFieldShapes(key){
+  if (fieldShapesBusy) return; fieldShapesBusy = true;
+  fetch('/fields.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.json()).then(j => {
+    const list = (j && Array.isArray(j.fields)) ? j.fields.filter(f => Array.isArray(f.polys) && f.polys.length && f.polys.every(p => p.every(v => Math.abs(v) < 10000))) : [];
+    fieldShapes = list; fieldShapesKey = key; fieldShapesAt = Date.now();
+    const svg = $('mmFields'); svg.replaceChildren();
+    list.forEach(f => {
+      const pth = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      pth.setAttribute('d', f.polys.map(p => { let d = ''; for (let i = 0; i + 1 < p.length; i += 2) d += (i ? 'L' : 'M') + p[i] + ' ' + p[i + 1]; return d + 'Z'; }).join(''));
+      pth.dataset.fid = f.id; svg.appendChild(pth);
+    });
+  }).catch(() => {}).finally(() => { fieldShapesBusy = false; });
+}
+const mixFieldCol = (a, b, t) => { t = Math.max(0, Math.min(1, t)); const p = h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16));
+  const A = p(a), B = p(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
+// couleur de la culture envoyee par le mod (valeurs lineaires du jeu "r,g,b") -> couleur ecran ; sinon palette de secours
+const lin2hex = v => { v = Math.max(0, Math.min(1, v)); const c = v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055; return Math.round(c * 255).toString(16).padStart(2, '0'); };
+function cropColor(st){
+  if (typeof st.fc === 'string'){ const a = st.fc.split(',').map(Number); if (a.length >= 3 && a.every(isFinite)) return '#' + a.slice(0, 3).map(lin2hex).join(''); }
+  return CROP_COLORS[st.fi % CROP_COLORS.length];
+}
+const CROP_COLORS = ['#f2c14e', '#e76f51', '#8ecae6', '#b5e48c', '#cdb4db', '#ffafcc', '#90be6d', '#f9844a', '#43aa8b', '#f8961e', '#577590', '#d4a373'];
+// memes couleurs que la carte du jeu (couche Croissance)
+function growthCat(st){
+  if (st.wither) return ['Fané', '#6e4423'];
+  if (st.cut) return ['Récolté', '#8f5aa8'];
+  if (st.prep) return ['Retirer les fanes', '#d9412a'];
+  if (st.ready) return ['Prêt à récolter', '#e8962a'];
+  if (st.fi) return ['En croissance', mixFieldCol('#2f6f2a', '#a6e35a', (st.gp || 0) / 100)];
+  const gt = String(st.gt || '').toUpperCase();
+  if (gt.includes('STUBBLE')) return ['Labour superficiel', '#86c3a3'];
+  if (gt.includes('PLOW')) return ['Labouré', '#4a3550'];
+  if (gt.includes('SEEDBED')) return ['Lit de semences', '#4ed7b4'];
+  if (gt.includes('CULTIV') || gt.includes('TILL')) return ['Travaillé', '#57a3e0'];
+  if (gt.includes('GRASS')) return ['Herbe', '#5fae4a'];
+  return null;
+}
+function fieldFill(st, layer){
+  if (!st) return null;
+  if (layer === 1){ const c = growthCat(st); return c ? {color:c[1], label:c[0], key:c[0] === 'En croissance' ? '#3d8c33' : c[1]} : null; }
+  if (layer === 2){ if (!st.fi) return null; const c = cropColor(st); return {color:c, label:st.fn || 'Culture', key:c}; }
+  if (layer === 3){                                         // composition du sol : memes couleurs que la carte du jeu
+    if (st.lp === 0) return {color:'#4fd6b4', label:'A besoin de chaux'};
+    if (st.pp === 0) return {color:'#0b0b0b', label:'Doit être labouré'};
+    if (typeof st.sp === 'number' && st.sp >= 100) return {color:'#003a9a', label:'Fertilisé'};
+    if (typeof st.sp === 'number' && st.sp > 0) return {color:'#1a5fcf', label:'Fertilisé (en partie)'};
+    return null;
+  }
+  return null;
+}
+function renderFieldLayer(d, key){
+  const layer = mapLayer(), svg = $('mmFields'), leg = $('mmLegend');
+  svg.style.display = layer ? '' : 'none'; leg.classList.toggle('on', !!layer);
+  if (!layer) return;
+  if (fieldShapesKey !== key || (!(fieldShapes && fieldShapes.length) && Date.now() - fieldShapesAt > 15000)) loadFieldShapes(key);
+  const states = {}; (Array.isArray(d.fieldStates) ? d.fieldStates : []).forEach(st => { states[st.id] = st; });
+  const used = new Map();
+  svg.querySelectorAll('path').forEach(pth => {
+    const f = fieldFill(states[pth.dataset.fid], layer);
+    pth.style.fill = f ? f.color : 'transparent'; pth.style.stroke = f ? '' : 'transparent';
+    if (f && f.label && !used.has(f.label)) used.set(f.label, f.key || f.color);
+  });
+  let html = '';
+  [...used].slice(0, 8).forEach(([label, color]) => { html += '<span><i style="background:' + color + '"></i>' + label + '</span>'; });
+  if (!fieldShapes || !fieldShapes.length) html = '<span>Champs : en attente du jeu…</span>';
+  if (leg._h !== html){ leg.innerHTML = html; leg._h = html; }
+}
+const fmtDist = m => m >= 1000 ? (m / 1000).toFixed(1).replace('.', ',') + ' km' : Math.round(m / 10) * 10 + ' m';
+function renderRadar(d){
+  const el = els.radar; if (!el || el.style.display === 'none') return;
+  const mm = $('mm'), W = mm.clientWidth, H = mm.clientHeight; if (!W || !H) return;
+  const mi = d.mapInfo || {};
+  const size = (typeof mi.size === 'number' && mi.size > 0) ? mi.size : ((typeof mi.width === 'number' && mi.width > 0) ? mi.width : 2048);
+  const key = mi.mapXml || mi.image || mi.title || '';
+  if (key && key !== radarKey){
+    radarKey = key; const img = $('mmImg'); img.classList.remove('err'); mm.classList.remove('noimg');
+    img.onerror = () => { img.classList.add('err'); mm.classList.add('noimg'); };
+    img.src = '/img/map?k=' + encodeURIComponent(key) + '&v=2';
+  }
+  let players = Array.isArray(d.players) ? d.players.filter(p => typeof p.x === 'number' && typeof p.z === 'number') : [];
+  if (mapSelfOnly()) players = players.filter(p => p.self);
+  const me = players.find(p => p.self);
+  let scale, ox, oy;
+  if (mapMode() === 'follow' && me){
+    scale = Math.min(W, H) / (2 * mapRadius());
+    ox = W / 2 - (me.x + size / 2) * scale; oy = H / 2 - (me.z + size / 2) * scale;
+  } else {
+    scale = Math.min(W, H) / size; ox = (W - size * scale) / 2; oy = (H - size * scale) / 2;
+  }
+  const w = $('mmWorld'); w.style.width = w.style.height = (size * scale) + 'px'; w.style.left = ox + 'px'; w.style.top = oy + 'px';
+  const fsvg = $('mmFields'); const vb = (-size / 2) + ' ' + (-size / 2) + ' ' + size + ' ' + size;
+  if (fsvg.getAttribute('viewBox') !== vb) fsvg.setAttribute('viewBox', vb);
+  renderFieldLayer(d, key);
+  const box = $('mmPins'), seen = new Set(), pad = 14;
+  players.forEach((p, i) => {
+    const id = 'pin_' + (p.self ? 'moi' : String(p.name || i).replace(/[^\w-]/g, '_'));
+    seen.add(id);
+    let pin = box.querySelector('[data-pid="' + id + '"]');
+    if (!pin){
+      pin = document.createElement('div'); pin.className = 'pin'; pin.dataset.pid = id;
+      pin.innerHTML = p.self ? '<div class="arrow">' + ARROW_SVG + '</div>' : '<div class="dot"></div><div class="name"></div>';
+      box.appendChild(pin);
+    }
+    let x = ox + (p.x + size / 2) * scale, y = oy + (p.z + size / 2) * scale;
+    const cx = Math.max(pad, Math.min(W - pad, x)), cy = Math.max(pad, Math.min(H - pad, y));
+    pin.classList.toggle('edge', cx !== x || cy !== y);
+    pin.style.transform = 'translate(' + cx.toFixed(1) + 'px,' + cy.toFixed(1) + 'px)';
+    if (p.self){
+      if (typeof p.dx === 'number' && typeof p.dz === 'number' && (p.dx || p.dz))
+        pin.querySelector('.arrow').style.setProperty('--r', (Math.atan2(p.dx, -p.dz) * 180 / Math.PI).toFixed(0) + 'deg');
+    } else {
+      pin.style.setProperty('--c', pinColor(p.name));
+      const nm = pin.querySelector('.name'), edge = cx !== x || cy !== y;
+      let txt = (p.name || 'Joueur') + (p.vehicle ? ' 🚜' : '');
+      if (edge && me) txt += ' · ' + fmtDist(Math.hypot(p.x - me.x, p.z - me.z));       // hors de la vue : distance
+      if (nm.textContent !== txt) nm.textContent = txt;
+      // l'etiquette reste dans le cadre : alignee a gauche/droite pres des bords, au-dessus du point en bas
+      const lw = nm.offsetWidth, lh = nm.offsetHeight, gap = Math.max(10, 16 * (parseFloat(getComputedStyle(el).getPropertyValue('--u')) || 1));
+      let lx = -lw / 2;
+      if (cx + lw / 2 > W - 4) lx = W - 4 - cx - lw; if (cx + lx < 4) lx = 4 - cx;
+      const ly = (cy + gap + lh > H - 4) ? -(gap + lh) : gap;
+      nm.style.setProperty('--lx', lx.toFixed(0) + 'px'); nm.style.setProperty('--ly', ly.toFixed(0) + 'px');
+    }
+    if (p.self) box.appendChild(pin);          // la fleche reste au-dessus des autres
+  });
+  box.querySelectorAll('.pin').forEach(pin => { if (!seen.has(pin.dataset.pid)) pin.remove(); });
+}
+const mapAlpha = () => (layout.mapalpha && typeof layout.mapalpha.x === 'number') ? Math.max(0, Math.min(100, layout.mapalpha.x)) : 100;
+function syncMapOptions(){
+  if (els.radar) els.radar.style.setProperty('--mapA', (mapAlpha() / 100).toFixed(2));
+  if (!EDIT || !$('mapModeSeg')) return;
+  $('mapLayerSeg').querySelectorAll('a').forEach(a => a.classList.toggle('cur', Number(a.dataset.layer) === mapLayer()));
+  $('mmLayers').querySelectorAll('a').forEach(a => a.classList.toggle('cur', Number(a.dataset.layer) === mapLayer()));
+  $('optMapAlpha').value = mapAlpha(); $('optMapAlphaVal').textContent = Math.round(mapAlpha()) + ' %';
+  $('mapModeSeg').querySelectorAll('a').forEach(a => a.classList.toggle('cur', (a.dataset.mode === '1') === (mapMode() === 'follow')));
+  const z = (layout.mapzoom && typeof layout.mapzoom.x === 'number') ? layout.mapzoom.x : 30;
+  $('optMapZoom').value = z; $('optMapZoomVal').textContent = mapRadius() + ' m';
+  $('mapZoomRow').style.display = mapMode() === 'follow' ? '' : 'none';
+  $('optMapSelf').checked = mapSelfOnly();
+}
+// transparence propre a chaque bloc (sinon : reglage general du panneau)
+const blockAlpha = id => { const v = layout['alpha_' + id] && layout['alpha_' + id].x; return typeof v === 'number' ? Math.max(0, Math.min(100, v)) : null; };
+function applyBlockAlphas(){
+  BLOCKS.forEach(b => {
+    if (b.id === 'radar') return;                                  // la mini-carte a son propre reglage (--mapA)
+    if (b.id === 'brand'){                                         // logo : opacite du bloc entier, 40 % minimum
+      const el = els.brand; if (!el) return;
+      const a = blockAlpha('brand'), eff = a === null ? 100 : Math.max(BRAND_ALPHA_MIN, a);
+      el.style.opacity = (eff / 100).toFixed(2);
+      const r = el.querySelector('.alphactl input'); if (r){ r.value = eff; el.querySelector('.alphactl span').textContent = Math.round(eff) + ' %'; }
+      return;
+    }
+    const el = els[b.id]; if (!el) return;
+    const a = blockAlpha(b.id), eff = a === null ? cardAlpha() : a;
+    if (a === null) el.style.removeProperty('--cardA'); else el.style.setProperty('--cardA', (a / 100).toFixed(2));
+    el.classList.toggle('lowbg', eff < 40); el.classList.toggle('hasalpha', a !== null);
+    const r = el.querySelector('.alphactl input'); if (r){ r.value = eff; el.querySelector('.alphactl span').textContent = Math.round(eff) + ' %'; }
+  });
+  const rr = els.radar && els.radar.querySelector('.alphactl input');
+  if (rr){ rr.value = mapAlpha(); els.radar.querySelector('.alphactl span').textContent = Math.round(mapAlpha()) + ' %'; }
+}
+function applyAll(){ syncMapOptions(); applyAlpha(); applyBlockAlphas(); BLOCKS.forEach(applyBlock); applyParts(); document.body.classList.toggle('showidle', !!(layout.nosessionshow && layout.nosessionshow.visible === true)); }
+// Le recalcul est differe a l'image suivante : evite l'avertissement "ResizeObserver loop completed with
+// undelivered notifications" (inoffensif, mais inutile a afficher).
+const rescalePending = {};
+BLOCKS.forEach(b => new ResizeObserver(() => {
+  if (rescalePending[b.id]) return;
+  rescalePending[b.id] = true;
+  requestAnimationFrame(() => { rescalePending[b.id] = false; rescale(b); });
+}).observe(els[b.id]));
+window.addEventListener('resize', () => { fitStage(); applyAll(); updateProfileInfo(); });
+
+/* ---- anti-chevauchement ---- */
+const EPS = 0.01;
+const overlaps = (a, b) => a.x < b.x+b.w-EPS && a.x+a.w > b.x+EPS && a.y < b.y+b.h-EPS && a.y+a.h > b.y+EPS;
+const inBounds = r => r.x >= -EPS && r.y >= -EPS && r.x+r.w <= 100+EPS && r.y+r.h <= 100+EPS;
+const collides = (r, ignore) => BLOCKS.some(o => !ignore.includes(o.id) && geo(o.id).visible && overlaps(r, geo(o.id)));
+function findFreeSpot(r, pref, ignore){          // emplacement libre le plus proche de 'pref'
+  let best = null, bd = Infinity;
+  for (let y = 0; y <= 100 - r.h + EPS; y += 0.5)
+    for (let x = 0; x <= 100 - r.w + EPS; x += 0.5){
+      const d = (x-pref.x)**2 + (y-pref.y)**2;
+      if (d >= bd) continue;
+      const c = {x, y, w:r.w, h:r.h};
+      if (!collides(c, ignore)){ bd = d; best = c; }
+    }
+  return best;
+}
+let noteTimer = null;
+function note(msg){
+  const n = $('note'); if (!n) return;
+  n.textContent = msg; clearTimeout(noteTimer); noteTimer = setTimeout(() => n.textContent = '', 4000);
+}
+// Apres un deplacement : si le bloc recouvre d'autres blocs, ils lui cedent la place.
+function resolveMove(b, origin){
+  const g = geo(b.id);
+  const hit = BLOCKS.filter(o => o.id !== b.id && geo(o.id).visible && overlaps(g, geo(o.id)));
+  if (!hit.length) return true;
+  const backup = JSON.parse(JSON.stringify(layout));
+
+  if (hit.length === 1){                          // 1) echange pur des deux emplacements
+    const o = hit[0], og = geo(o.id);
+    const d2 = Object.assign({}, g,  {x:og.x,     y:og.y});
+    const o2 = Object.assign({}, og, {x:origin.x, y:origin.y});
+    if (inBounds(d2) && inBounds(o2) && !overlaps(d2, o2) &&
+        !collides(d2, [b.id, o.id]) && !collides(o2, [b.id, o.id])){
+      layout[K(b.id)] = d2; layout[K(o.id)] = o2; applyBlock(b); applyBlock(o); return true;
+    }
+  }
+  for (const o of hit){                           // 2) sinon : ancienne place, ou place libre la plus proche
+    const og = geo(o.id);
+    const atOrigin = Object.assign({}, og, {x:origin.x, y:origin.y});
+    let spot = (inBounds(atOrigin) && !collides(atOrigin, [o.id])) ? {x:atOrigin.x, y:atOrigin.y}
+                                                                    : findFreeSpot(og, origin, [o.id]);
+    if (!spot){
+      layout = backup; layout[K(b.id)] = Object.assign({}, origin); applyAll();
+      note("Pas assez de place : bloc remis à sa position.");
+      return false;
+    }
+    layout[K(o.id)] = Object.assign({}, og, {x:spot.x, y:spot.y}); applyBlock(o);
+  }
+  return true;
+}
+
+async function loadLayout(){
+  try{
+    const r = await fetch('/layout.json?t=' + Date.now(), {cache:'no-store'});
+    if (!r.ok) return;
+    const next = await r.json();
+    if (JSON.stringify(next) !== JSON.stringify(layout)){ layout = next; applyAll(); syncChecks(); }
+  }catch(e){}
+}
+let saveTimer = null;
+function saveLayout(){
+  clearTimeout(saveTimer);
+  $('saved').textContent = 'Enregistrement…';
+  saveTimer = setTimeout(async () => {
+    try{
+      const r = await fetch('/layout.json', {method:'POST', body:JSON.stringify(layout)});
+      $('saved').textContent = r.ok ? 'Enregistré ✓' : "Erreur d'enregistrement";
+    }catch(e){ $('saved').textContent = 'Serveur injoignable'; }
+  }, 250);
+}
+
+/* ---------------------------------------------------------------- dispositions enregistrees (1.4.4) */
+let dispoState = null;
+async function dispoCall(body){
+  try{
+    const r = await fetch('/dispositions', body ? {method:'POST', body: JSON.stringify(body)} : {cache:'no-store'});
+    const j = await r.json();
+    if (j.error){ note('⚠️ ' + j.error); return null; }
+    dispoState = j; renderDispos(); return j;
+  }catch(e){ note('Serveur injoignable'); return null; }
+}
+function renderDispos(){
+  const box = $('dispos'); if (!box || !dispoState) return;
+  const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  let h = dispoState.slots.map((sl, i) => `<div class="slot"><div class="row"><span class="nm">${i + 1} · ${esc(sl.name)}</span><button class="ren" data-ren="${i}" title="Renommer">✏️</button><span class="dt">${sl.empty ? 'vide' : esc(sl.at)}</span></div>
+    <div class="row"><button data-save="${i}">💾 Enregistrer</button>${sl.empty ? '' : `<button class="go" data-load="${i}">↩ Charger</button>`}</div></div>`).join('');
+  if (dispoState.backup) h += `<div class="slot bk"><div class="row"><span class="nm">↶ Version précédente</span></div><div class="row"><span class="dt" style="margin-left:0">${esc(dispoState.backup.at)}</span><button class="go" data-load="backup" style="margin-left:auto">↩ Revenir</button></div></div>`;
+  box.innerHTML = h;
+  box.querySelectorAll('[data-save]').forEach(b => b.onclick = async () => {
+    const i = Number(b.dataset.save), sl = dispoState.slots[i];
+    if (!sl.empty && !await askConfirm('Remplacer ?', 'Remplacer « ' + sl.name + ' » ?', '💾 Oui')) return;
+    if (await dispoCall({action: 'save', slot: i, layout})) note('Enregistré ✓');
+  });
+  box.querySelectorAll('[data-load]').forEach(b => b.onclick = async () => {
+    const w = b.dataset.load;
+    if (await dispoCall({action: 'load', slot: w === 'backup' ? 'backup' : Number(w)})){ await loadLayout(); syncChecks();
+      try{ syncMapOptions(); applyBlockAlphas(); }catch(e){} note('Chargé ✓'); }
+  });
+  box.querySelectorAll('[data-ren]').forEach(b => b.onclick = () => {
+    const i = Number(b.dataset.ren), n = prompt('Nom de la disposition ' + (i + 1) + ' :', dispoState.slots[i].name);
+    if (n !== null) dispoCall({action: 'rename', slot: i, name: n});
+  });
+}
+if (EDIT) dispoCall();
+
+/* ---------------------------------------------------------------- mode edition */
+const BLOCK_ICONS = {radar:'📍', brand:'🏷️', map:'🗺️', clock:'🕑', weather:'☀️', money:'💶', hours:'⏱️', vehicle:'🚜', implements:'🔧', field:'🌾'};
+function showTab(name){
+  document.querySelectorAll('#panel .ptabs button').forEach(b => b.classList.toggle('cur', b.dataset.tab === name));
+  document.querySelectorAll('#panel .ptab').forEach(s => { s.hidden = s.dataset.tab !== name; });
+  try{ localStorage.setItem('fs25.panelTab', name); }catch(e){}
+}
+if (EDIT){
+  document.querySelectorAll('#panel .ptabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+  let t = 'disp'; try{ t = localStorage.getItem('fs25.panelTab') || 'disp'; }catch(e){}
+  showTab(document.querySelector('#panel .ptab[data-tab="' + t + '"]') ? t : 'disp');
+}
+if (EDIT && $('copyUrl')) $('copyUrl').addEventListener('click', async () => {
+  const url = location.origin + '/';
+  try{ await navigator.clipboard.writeText(url); }
+  catch(e){ const t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); try{ document.execCommand('copy'); }catch(_){} t.remove(); }
+  $('copyUrl').textContent = '✓ Copié : ' + url; setTimeout(() => { $('copyUrl').textContent = "📋 Copier l'adresse"; }, 2500);
+});
+// boutons "Ajouter dans OBS" : lien glissable (OBS cree une source Navigateur avec layer-name/width/height)
+if (EDIT){
+  // 1.4.4 : un seul bouton, taille de la scene OBS au choix (Full HD / 2K), retenue ; par defaut : 2K si l'ecran le permet
+  const setRes = res => {
+    const [w, h] = res.split('x'), a = $('obsBtn'); if (!a) return;
+    a.dataset.w = w; a.dataset.h = h;
+    a.href = location.origin + '/' + a.dataset.q + 'layer-name=' + encodeURIComponent('FS25 Stream & Companion') + '&layer-width=' + w + '&layer-height=' + h;
+    $('obsSize').textContent = 'glisse-moi dans OBS · ' + w + '×' + h;
+    document.querySelectorAll('#panel .obssize a').forEach(x => x.classList.toggle('on', x.dataset.res === res));
+    try{ localStorage.setItem('fs25.obsRes', res); }catch(e){}
+  };
+  let res0 = null; try{ res0 = localStorage.getItem('fs25.obsRes'); }catch(e){}
+  setRes(res0 || (screen.height >= 1440 ? '2560x1440' : '1920x1080'));
+  document.querySelectorAll('#panel .obssize a').forEach(x => x.onclick = () => setRes(x.dataset.res));
+  document.querySelectorAll('#panel .obsbtn').forEach(a => {
+    a.title = 'Glisse-moi sur l\'aperçu d\'OBS';
+    a.addEventListener('click', e => { e.preventDefault(); note('Glisse le bouton sur l\'aperçu d\'OBS (ne clique pas).'); });
+    a.addEventListener('dragstart', e => { e.dataTransfer.setData('text/uri-list', a.href); e.dataTransfer.setData('text/plain', a.href); });
+  });
+}
+function syncChecks(){
+  if (!EDIT) return;
+  if ($('optAlerts')) $('optAlerts').checked = alertsAlways();
+  if ($('optIdle')) $('optIdle').checked = !!(layout.nosessionshow && layout.nosessionshow.visible === true);
+  BLOCKS.forEach(b => { const c = $('chk_'+b.id); if (c) c.checked = geo(b.id).visible; });
+  PARTS.forEach(p => { const c = $('chk_'+p.id); if (c) c.checked = partVisible(p.id); });
+}
+if (EDIT){
+  BLOCKS.forEach(b => {
+    // transparence de ce bloc : bouton ◐ en bas a gauche, ouvre un mini-curseur
+    if (els[b.id].classList.contains('card') || b.id === 'brand'){
+      const ac = document.createElement('div'); ac.className = 'alphactl';
+      ac.innerHTML = '<b title="Transparence de ce bloc">◐</b><input type="range" min="' + (b.id === 'brand' ? BRAND_ALPHA_MIN : 0) + '" max="100" step="1"><span></span>';
+      ['pointerdown', 'dblclick'].forEach(ev => ac.addEventListener(ev, e => e.stopPropagation()));
+      ac.querySelector('b').addEventListener('click', e => { e.stopPropagation(); ac.classList.toggle('open'); });
+      ac.querySelector('input').addEventListener('input', e => {
+        const v = Number(e.target.value);
+        if (b.id === 'radar'){ layout.mapalpha = {x: v}; syncMapOptions(); }
+        else { layout['alpha_' + b.id] = {x: v}; els[b.id].classList.add('hasalpha'); }
+        applyBlockAlphas(); saveLayout();
+      });
+      els[b.id].appendChild(ac);
+    }
+    const tag = document.createElement('div'); tag.className = 'tag'; tag.textContent = b.name;
+    const h = document.createElement('div'); h.className = 'handle';
+    els[b.id].append(tag, h);
+
+    const lab = document.createElement('label'); lab.className = 'tile'; lab.title = b.name;
+    lab.innerHTML = '<input type="checkbox" id="chk_'+b.id+'" checked><b>' + (BLOCK_ICONS[b.id] || '▫️') + '</b>' + b.name;
+    if (b.id === 'brand'){                                     // toujours affiche : tuile verrouillee
+      lab.classList.add('locked'); lab.title = 'Toujours affiché (on peut le déplacer, l\'agrandir et le rendre plus transparent)';
+      lab.querySelector('input').disabled = true; lab.insertAdjacentHTML('beforeend', '<i class="lock">🔒 toujours affiché</i>');
+    }
+    lab.querySelector('input').addEventListener('change', e => {
+      if (b.id === 'brand'){ e.target.checked = true; return; }
+      const input = e.target;
+      layout[K(b.id)] = Object.assign({}, geo(b.id), {visible:input.checked});
+      if (input.checked){
+        const g = geo(b.id);
+        if (collides(g, [b.id])){
+          const spot = findFreeSpot(g, g, [b.id]);
+          if (spot) layout[K(b.id)] = Object.assign({}, g, {x:spot.x, y:spot.y});
+          else {
+            layout[K(b.id)] = Object.assign({}, g, {visible:false}); input.checked = false;
+            note('Pas de place libre : réduis un autre bloc.'); applyBlock(b); return;
+          }
+        }
+      }
+      applyBlock(b); saveLayout();
+    });
+    if (b.id !== 'brand') $('checks').appendChild(lab);    // 1.4.4 : plus de tuile pour le logo (toujours affiche, rien a cocher)
+
+    let mode = null, start = null;
+    els[b.id].addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      mode = e.target.classList.contains('handle') ? 'resize' : 'move';
+      start = {px:e.clientX, py:e.clientY, g:geo(b.id)};
+      els[b.id].setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    els[b.id].addEventListener('pointermove', e => {
+      if (!mode) return;
+      const R = stage.getBoundingClientRect();
+      const dx = (e.clientX - start.px) / R.width * 100;
+      const dy = (e.clientY - start.py) / R.height * 100;
+      const snap = v => Math.round(v * 2) / 2;
+      const g = Object.assign({}, start.g);
+      if (mode === 'move'){
+        g.x = snap(Math.max(0, Math.min(100 - g.w, start.g.x + dx)));
+        g.y = snap(Math.max(0, Math.min(100 - g.h, start.g.y + dy)));
+      } else {
+        const mw = b.id === 'brand' ? BRAND_MIN.w : 4, mh = b.id === 'brand' ? BRAND_MIN.h : 3;
+        g.w = snap(Math.max(mw, Math.min(100 - g.x, start.g.w + dx)));
+        g.h = snap(Math.max(mh, Math.min(100 - g.y, start.g.h + dy)));
+        if (collides(g, [b.id])) return;          // on ne peut pas agrandir par-dessus un autre bloc
+      }
+      layout[K(b.id)] = g; applyBlock(b);
+      if (mode === 'move')
+        BLOCKS.forEach(o => els[o.id].classList.toggle('hit', o.id !== b.id && geo(o.id).visible && overlaps(g, geo(o.id))));
+    });
+    const end = () => {
+      if (!mode) return;
+      const wasMove = mode === 'move'; mode = null;
+      BLOCKS.forEach(o => els[o.id].classList.remove('hit'));
+      if (wasMove) resolveMove(b, start.g);
+      saveLayout();
+    };
+    els[b.id].addEventListener('pointerup', end);
+    els[b.id].addEventListener('pointercancel', end);
+  });
+
+  PARTS.forEach(p => {
+    const lab = document.createElement('label'); lab.className = 'sw';
+    lab.innerHTML = p.name + '<input type="checkbox" class="tgl" id="chk_'+p.id+'" checked>';
+    lab.querySelector('input').addEventListener('change', e => {
+      layout[p.id] = {visible:e.target.checked};
+      applyParts(); saveLayout();
+    });
+    $('partChecks').appendChild(lab);
+  });
+
+  $('optAlerts').addEventListener('change', e => { layout.alertsalways = {visible:e.target.checked}; saveLayout(); });
+  $('optIdle').addEventListener('change', e => { layout.nosessionshow = {visible:e.target.checked}; applyAll(); saveLayout(); });
+  $('optAlpha').addEventListener('input', e => { layout.cardalpha = {x: Number(e.target.value)}; applyAlpha(); applyBlockAlphas(); saveLayout(); });
+  $('mapModeSeg').querySelectorAll('a').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault(); layout.mapmode = {x: Number(a.dataset.mode)}; syncMapOptions(); saveLayout();
+  }));
+  $('optMapZoom').addEventListener('input', e => { layout.mapzoom = {x: Number(e.target.value)}; syncMapOptions(); saveLayout(); });
+  [...$('mapLayerSeg').querySelectorAll('a'), ...$('mmLayers').querySelectorAll('a')].forEach(a => {
+    a.addEventListener('pointerdown', e => e.stopPropagation());          // ne deplace pas le bloc
+    a.addEventListener('click', e => {
+      e.preventDefault(); e.stopPropagation(); layout.maplayer = {x: Number(a.dataset.layer)}; syncMapOptions(); saveLayout();
+      if (window._lastData) renderRadar(window._lastData);
+    });
+  });
+  $('optMapAlpha').addEventListener('input', e => { layout.mapalpha = {x: Number(e.target.value)}; syncMapOptions(); saveLayout(); });
+  $('optMapSelf').addEventListener('change', e => { layout.mapself = {visible: e.target.checked}; saveLayout(); });
+  $('resetBtn').addEventListener('click', async () => {
+    if (!await askConfirm("Tu es sûr ?", "Les blocs reviennent à leur place d'origine. Tu pourras revenir en arrière (↶ Version précédente).", "↺ Oui, réinitialiser")) return;
+    await dispoCall({action: 'backup', why: 'avant réinitialisation', layout});         // 1.4.4 : copie de secours
+    Object.keys(layout).forEach(k => { if (BLOCKS.some(b => K(b.id) === k)) delete layout[k]; });   // seulement ce profil
+    applyAll(); syncChecks(); saveLayout();
+  });
+  // panneau "Mode edition" : reduit au chargement ; clic sur l'en-tete = ouvrir/reduire ; glisser l'en-tete = deplacer
+  (() => {
+    const panel = $('panel'), head = $('panelHead'), KEY = 'fs25_panelPos';
+    const clamp = () => {                                   // garde l'en-tete toujours visible a l'ecran
+      if (!panel.style.left) return;
+      const r = panel.getBoundingClientRect();
+      const x = Math.min(Math.max(0, r.left), Math.max(0, innerWidth - r.width));
+      const y = Math.min(Math.max(0, r.top), Math.max(0, innerHeight - (panel.classList.contains('min') ? head.offsetHeight : r.height)));
+      panel.style.left = x + 'px'; panel.style.top = y + 'px';
+    };
+    const place = (x, y) => { panel.style.left = x + 'px'; panel.style.top = y + 'px'; panel.style.right = 'auto'; panel.style.bottom = 'auto'; clamp(); };
+    try { const p = JSON.parse(localStorage.getItem(KEY) || 'null'); if (p && isFinite(p.x) && isFinite(p.y)) place(p.x, p.y); } catch (e) {}
+    let drag = null;
+    head.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      const r = panel.getBoundingClientRect();
+      drag = {sx: e.clientX, sy: e.clientY, ox: r.left, oy: r.top, moved: false};
+      head.setPointerCapture(e.pointerId);
+    });
+    head.addEventListener('pointermove', e => {
+      if (!drag) return;
+      const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+      if (!drag.moved && Math.hypot(dx, dy) < 5) return;
+      drag.moved = true; panel.classList.add('dragging');
+      place(drag.ox + dx, drag.oy + dy);
+    });
+    const end = e => {
+      if (!drag) return;
+      const d = drag; drag = null; panel.classList.remove('dragging');
+      if (d.moved) {
+        const r = panel.getBoundingClientRect();
+        try { localStorage.setItem(KEY, JSON.stringify({x: r.left, y: r.top})); } catch (err) {}
+      } else if (e.type === 'pointerup') {
+        panel.classList.toggle('min');
+        $('panelToggle').textContent = panel.classList.contains('min') ? '▸' : '▾';
+        clamp();
+      }
+    };
+    head.addEventListener('pointerup', end);
+    head.addEventListener('pointercancel', end);
+    addEventListener('resize', clamp);
+  })();
+  $('statusBox').classList.add('show');
+}
+
+/* ---------------------------------------------------------------- donnees du jeu */
+const MONTHS = ['Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre','Janvier','Février'];   // periode 1 = mars
+const FC_ICON = {SUN:'☀️', CLEAR:'☀️', PARTIALLY_CLOUDY:'⛅', CLOUDY:'☁️', RAIN:'🌧️', THUNDER:'⛈️', SNOW:'❄️', HAIL:'🌨️', FOG:'🌫️', TWISTER:'🌪️'};
+function renderForecast(list){
+  const box = $('forecast'); if (!box) return;
+  const key = JSON.stringify(list || []);
+  if (box.dataset.key === key) return;
+  box.dataset.key = key; box.replaceChildren();
+  const prio = it => it.hours <= 3 ? 0 : it.hours <= 6 ? 1 : (it.dayOffset === 1 && it.hours > 12) ? 2 : it.hours <= 12 ? 3 : 4;
+  (list || []).slice().sort((a, b) => prio(a) - prio(b)).forEach(it => {
+    const label = (it.dayOffset >= 1 && it.hours > 12) ? (it.dayOffset === 1 ? 'Dem.' : 'J+' + it.dayOffset) : '+' + Math.round(it.hours) + 'h';
+    const sp = document.createElement('span'); sp.className = 'fci';
+    sp.textContent = (FC_ICON[String(it.type).toUpperCase()] || '·') + ' ';
+    const b = document.createElement('b'); b.textContent = label; sp.appendChild(b);
+    if (typeof it.temperature === 'number') sp.appendChild(document.createTextNode(' ' + Math.round(it.temperature) + '°'));
+    box.appendChild(sp);
+  });
+  box.classList.toggle('none', !(list && list.length));
+}
+const fmtLevel = (pct, level) => pct != null ? Math.round(pct) + ' %' : (level != null ? 'Niv. ' + Math.round(level) : '—');
+function gauge(barId, pct, cls){
+  const bar = $(barId); bar.style.width = (pct == null ? 0 : Math.max(0, Math.min(100, pct))) + '%';
+  bar.className = cls || '';
+}
+function renderField(f){
+  f = f || {};
+  const known = typeof f.onField === 'boolean';                 // le mod envoie-t-il les infos de champ ?
+  const on = f.onField === true, hasFruit = on && f.fruit;
+  $('fNum').textContent = on && f.number != null ? 'N° ' + Math.round(f.number) : (known ? 'Hors champ' : '—');
+  const area = on && typeof f.areaHa === 'number' ? f.areaHa.toFixed(2).replace('.', ',') + ' ha' : '';
+  const forSale = on && !f.owner && f.ownerFarmId === 0;
+  const priceTxt = forSale && typeof f.price === 'number' && f.price > 0 ? ' ' + fmtInt(f.price) + ' €' : '';
+  const ownerTxt = !on ? '' : (f.owner ? f.owner : (forSale ? 'À vendre' + priceTxt : ''));
+  const fa = $('fArea'); fa.replaceChildren();
+  if (ownerTxt){ const b = document.createElement('b'); b.textContent = ownerTxt; fa.appendChild(b); }
+  if (ownerTxt && area) fa.appendChild(document.createTextNode(' · '));
+  if (area) fa.appendChild(document.createTextNode(area));
+  if (!ownerTxt && !area) fa.appendChild(document.createTextNode('\u00a0'));
+  $('fFruit').textContent = on ? (f.fruit || 'Aucune') : '—';
+  $('fFruitSub').innerHTML = '&nbsp;';
+  // croissance
+  let gTxt = '', gPct = null, gCls = '';
+  if (hasFruit){
+    if (f.harvestReady){ gTxt = 'Prêt à récolter'; gPct = 100; }
+    else if (f.cut){ gTxt = 'Récolté'; gPct = 0; }
+    else if (f.withered){ gTxt = 'Fané'; gPct = 0; gCls = 'bad'; }
+    else if (typeof f.growthPct === 'number'){ gTxt = 'En croissance'; gPct = f.growthPct; }
+  } else if (on) gTxt = 'Pas de culture';
+  $('fGrowthPct').textContent = gPct == null ? '—' : Math.round(gPct) + ' %';
+  $('fGrowthTxt').textContent = gTxt || '\u00a0';
+  gauge('fGrowthBar', gPct, gCls);
+  // sol
+  const soil = (idText, idBar, pct, level) => {
+    $(idText).textContent = on ? fmtLevel(pct, level) : '—';
+    gauge(idBar, on ? pct : null, on && pct != null && pct < 25 ? 'warn' : '');
+  };
+  soil('fSpray', 'fSprayBar', f.sprayPct, f.sprayLevel);
+  soil('fLime', 'fLimeBar', f.limePct, f.limeLevel);
+  soil('fPlow', 'fPlowBar', f.plowPct, f.plowLevel);
+  $('fSprayTxt').textContent = on && f.sprayPct === 0 ? 'Non fertilisé' : '\u00a0';
+  $('fLimeTxt').textContent = on && f.limePct === 0 ? 'À chauler' : '\u00a0';
+  $('fPlowTxt').textContent = '\u00a0';
+  $('ftPlow').style.display = (f.plowPct != null || f.plowLevel != null) ? '' : 'none';
+  ['ftCulture', 'ftGrowth', 'ftSpray', 'ftLime', 'ftPlow'].forEach(id => $(id).classList.toggle('dim', !on));
+}
+const WEATHER = {SUN:'☀️ Ensoleillé',CLEAR:'☀️ Dégagé',CLOUDY:'☁️ Nuageux',RAIN:'🌧️ Pluie',SNOW:'❄️ Neige',
+  HAIL:'🌨️ Grêle',FOG:'🌫️ Brouillard',THUNDER:'⛈️ Orage',TWISTER:'🌪️ Tornade'};
+const fmtInt = n => Number(n).toLocaleString('fr-FR',{maximumFractionDigits:0});
+const setBar = (bar, pct) => bar.style.width = Math.max(0, Math.min(100, pct)) + '%';
+
+function setImage(wrap, img, url){
+  if (img.dataset.key === url) return;
+  img.dataset.key = url;
+  wrap.classList.remove('noimg');
+  img.onerror = () => wrap.classList.add('noimg');
+  img.src = url;
+}
+function fullName(info, fallback){
+  const name = (info && info.name) || fallback || '';
+  const brand = info && info.brand;
+  return {brand: brand && !name.toLowerCase().startsWith(brand.toLowerCase()) ? brand : '', name};
+}
+
+/* --- icone de secours d'un produit (quand l'image du jeu est illisible) : un emoji adapte, d'apres le nom interne ou le titre --- */
+const FILL_EMOJI = [
+  [/herbicid|pesticid|fungicid|herbicide/, '🧪'], [/additive|additif/, '🧴'], [/fertili|engrais/, '⚗️'], [/\blime|chaux/, '🪨'],
+  [/manure|slurry|lisier|digestat|fumier/, '🟤'], [/water|\beau\b/, '💧'], [/milk|lait/, '🥛'], [/diesel|carburant|\bfuel/, '⛽'],
+  [/maize|corn|ma[iï]s/, '🌽'], [/canola|colza|rapeseed/, '🌼'], [/sunflower|tournesol/, '🌻'], [/soy|soja/, '🫘'], [/\bpea|bean|pois|haricot/, '🫛'],
+  [/potato|pomme de terre/, '🥔'], [/beet|betterave/, '🍠'], [/carrot|carotte/, '🥕'], [/spinach|[ée]pinard/, '🥬'], [/cotton|coton/, '☁️'],
+  [/sugarcane|canne/, '🎋'], [/grape|raisin/, '🍇'], [/olive/, '🫒'],
+  [/wheat|barley|oat|rye|spelt|bl[ée]\b|orge|avoine|seigle|[ée]peautre|sorgh|straw|paille|flour|farine/, '🌾'],
+  [/grass|herbe|silage|ensilage|hay|foin|forage|fourrage|chaff|hach/, '🌿'], [/wood|chips|bois|\blog|sawdust|copeaux/, '🪵'],
+  [/seed|semence/, '🌱'], [/egg|[oœ]uf/, '🥚'], [/wool|laine/, '🐑'], [/honey|miel/, '🍯'], [/bread|pain\b/, '🍞'], [/sugar|sucre/, '🍬'], [/\boil|huile/, '🛢️'],
+];
+function fillEmoji(f){
+  const stem = String((f && f.icon) || '').split('/').pop().replace(/^hud_fill_/, '').replace(/\.\w+$/, '');
+  const key = (stem + ' ' + String((f && f.title) || '')).toLowerCase();
+  for (const [re, emo] of FILL_EMOJI) if (re.test(key)) return emo;
+  return '📦';
+}
+
+/* --- contenu (reservoirs) : structure construite une fois, quantites mises a jour a chaque rafraichissement --- */
+function buildFills(container, fills, owner){
+  container.replaceChildren();
+  const refs = [];
+  fills.forEach((f, fi) => {
+    const row = document.createElement('div'); row.className = 'fill';
+    const ic = document.createElement('div'); ic.className = 'ficon' + (f.icon ? '' : ' noimg');
+    const img = document.createElement('img'); img.alt = '';
+    const emoji = document.createElement('span'); emoji.textContent = fillEmoji(f); emoji.style.display = f.icon ? 'none' : '';
+    img.onerror = () => { ic.classList.add('noimg'); emoji.style.display = ''; };
+    if (f.icon) img.src = '/img/fill/' + owner + '/' + fi + '?k=' + encodeURIComponent(f.icon);
+    ic.append(img, emoji);
+    const body = document.createElement('div'); body.className = 'fbody';
+    const line = document.createElement('div'); line.className = 'frow';
+    const nm = document.createElement('span'); nm.className = 'fname'; nm.textContent = f.title || 'Vide';
+    const qty = document.createElement('span'); qty.className = 'fqty';
+    line.append(nm, qty);
+    const bar = document.createElement('div'); bar.className = 'bar';
+    const fill = document.createElement('i'); bar.appendChild(fill);
+    body.append(line, bar); row.append(ic, body); container.appendChild(row);
+    refs.push({qty, fill});
+  });
+  return refs;
+}
+function updateFills(refs, fills){
+  (fills || []).forEach((f, fi) => {
+    const r = refs && refs[fi]; if (!r) return;
+    r.qty.textContent = fmtInt(f.level || 0) + ' L / ' + fmtInt(f.capacity || 0) + ' L';
+    setBar(r.fill, f.capacity > 0 ? (f.level || 0) / f.capacity * 100 : 0);
+  });
+}
+const fillKey = fills => (fills || []).map(f => [f.title || '', f.icon || '']);
+
+// options d'image (mode edition) : regroupees dans un menu deroulant "Image" en haut a droite de la photo
+function btnBox(wrap){
+  let b = wrap.querySelector('.wbtns');
+  if (!b){
+    const m = document.createElement('div'); m.className = 'wmenu';
+    const t = document.createElement('button'); t.type = 'button'; t.className = 'wtoggle'; t.textContent = '🖼 Image ▾';
+    b = document.createElement('div'); b.className = 'wbtns';
+    ['pointerdown', 'dblclick'].forEach(ev => m.addEventListener(ev, e => e.stopPropagation()));
+    t.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = !m.classList.contains('open');
+      document.querySelectorAll('.wmenu.open').forEach(o => { o.classList.remove('open'); o.querySelector('.wtoggle').textContent = '🖼 Image ▾'; });
+      m.classList.toggle('open', open); t.textContent = open ? '🖼 Image ▴' : '🖼 Image ▾';
+    });
+    m.append(t, b); wrap.appendChild(m);
+  }
+  return b;
+}
+document.addEventListener('click', e => {        // clic ailleurs : referme les menus "Image"
+  document.querySelectorAll('.wmenu.open').forEach(m => {
+    if (!m.contains(e.target)){ m.classList.remove('open'); m.querySelector('.wtoggle').textContent = '🖼 Image ▾'; }
+  });
+});
+
+/* --- capture depuis le jeu : partage de fenetre du navigateur (getDisplayMedia) + decoupe --- */
+const cap = {stream:null, req:null, onDone:null, sel:null, drag:null};
+const capScale = () => { const c = $('capCanvas'); return c.getBoundingClientRect().width / c.width; };
+function capUpdateSel(){
+  const box = $('capSel'), c = $('capCanvas'), s = cap.sel;
+  if (!s || c.hidden || (s.w >= c.width - 1 && s.h >= c.height - 1)){ box.style.display = 'none'; return; }
+  const k = capScale();
+  Object.assign(box.style, {display:'block', left:(s.x*k)+'px', top:(s.y*k)+'px', width:(s.w*k)+'px', height:(s.h*k)+'px'});
+}
+function capMode(mode){          // 'live' | 'frozen'
+  const live = mode === 'live';
+  $('capVideo').hidden = !live; $('capCanvas').hidden = live;
+  $('capShot').hidden = !live; $('capRetake').hidden = live; $('capSave').hidden = live;
+  $('capHint').textContent = live
+    ? "Place le véhicule bien en vue dans le jeu, puis clique « Prendre la photo »."
+    : "Trace un rectangle autour du véhicule (glisser), puis « Enregistrer ».";
+  capUpdateSel();
+}
+function closeCapture(){
+  if (cap.stream) cap.stream.getTracks().forEach(t => t.stop());
+  cap.stream = null; $('capVideo').srcObject = null; $('capModal').classList.remove('show');
+}
+async function openCapture(req, onDone){
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia){ note("Capture d'écran indisponible dans ce navigateur (utilise Chrome ou Edge)."); return; }
+  let stream;
+  try{ stream = await navigator.mediaDevices.getDisplayMedia({video:{frameRate:15}, audio:false}); }
+  catch(e){ note('Capture annulée.'); return; }
+  cap.stream = stream; cap.req = req; cap.onDone = onDone; cap.sel = null;
+  stream.getVideoTracks()[0].addEventListener('ended', closeCapture);
+  const v = $('capVideo'); v.srcObject = stream; try{ await v.play(); }catch(e){}
+  $('capTitle').textContent = 'Capturer : ' + (req.label || 'image') + ' (choisis la fenêtre du jeu)';
+  capMode('live'); $('capModal').classList.add('show');
+}
+$('capClose').addEventListener('click', closeCapture);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('capModal').classList.contains('show')) closeCapture(); });
+$('capShot').addEventListener('click', () => {
+  const v = $('capVideo'), c = $('capCanvas');
+  if (!v.videoWidth){ note('Pas encore d\'image, réessaie dans une seconde.'); return; }
+  c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0);
+  cap.sel = {x:0, y:0, w:c.width, h:c.height}; capMode('frozen');
+});
+$('capRetake').addEventListener('click', () => capMode('live'));
+(function(){
+  const c = $('capCanvas');
+  const pt = e => { const r = c.getBoundingClientRect(), k = c.width / r.width;
+    return {x:Math.max(0, Math.min(c.width,  (e.clientX - r.left) * k)), y:Math.max(0, Math.min(c.height, (e.clientY - r.top) * k))}; };
+  c.addEventListener('pointerdown', e => { cap.drag = pt(e); c.setPointerCapture(e.pointerId); e.preventDefault(); });
+  c.addEventListener('pointermove', e => {
+    if (!cap.drag) return; const p = pt(e), a = cap.drag;
+    cap.sel = {x:Math.min(a.x,p.x), y:Math.min(a.y,p.y), w:Math.abs(p.x-a.x), h:Math.abs(p.y-a.y)}; capUpdateSel();
+  });
+  c.addEventListener('pointerup', () => {
+    cap.drag = null;
+    if (cap.sel && (cap.sel.w < 30 || cap.sel.h < 30)){ cap.sel = {x:0, y:0, w:c.width, h:c.height}; capUpdateSel(); }   // trop petit : toute l'image
+  });
+})();
+$('capSave').addEventListener('click', () => {
+  const c = $('capCanvas'), s = cap.sel || {x:0, y:0, w:c.width, h:c.height};
+  const out = document.createElement('canvas'); out.width = Math.round(s.w); out.height = Math.round(s.h);
+  out.getContext('2d').drawImage(c, s.x, s.y, s.w, s.h, 0, 0, out.width, out.height);
+  out.toBlob(async blob => {
+    try{
+      const r = await fetch('/perso?kind=' + cap.req.kind + '&index=' + (cap.req.index || 0) + '&bg=' + (bgOn() ? 1 : 0), {method:'POST', headers:{'Content-Type':'image/png'}, body:blob});
+      const j = await r.json();
+      if (j.ok){ const done = cap.onDone; closeCapture(); if (done) done(); note('Image enregistrée ✓' + bgNote(j)); }
+      else note(j.reason || 'Échec de l\'enregistrement');
+    }catch(err){ note('Serveur injoignable'); }
+  }, 'image/png');
+});
+const CAPTURE = false;      // capture depuis le jeu retiree (partage d'ecran peu pratique) : bouton masque
+function addCaptureButton(wrap, img, req, getUrl){
+  if (!CAPTURE) return;
+  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'webbtn'; btn.textContent = '📷 Capturer';
+  btn.addEventListener('pointerdown', e => e.stopPropagation());
+  btn.addEventListener('click', e => { e.stopPropagation();
+    openCapture(req, () => { wrap.classList.remove('noimg'); img.src = getUrl() + '&r=' + Date.now(); }); });
+  btnBox(wrap).appendChild(btn);
+}
+
+let curVehicleInfo = null;     // infos du vehicule courant (pour pre-remplir la recherche Google)
+/* --- recherche Google Images (mode edition) : ouvre simplement un onglet, rien n'est envoye par le serveur --- */
+function googleQuery(info){
+  const name = (info && info.name) || '', brand = (info && info.brand) || '';
+  const base = (!brand || name.toLowerCase().startsWith(brand.toLowerCase())) ? name : brand + ' ' + name;
+  return (base + ' Farming Simulator 25').trim();
+}
+function openGoogle(q, transparent){
+  const tbs = transparent ? '&tbs=' + encodeURIComponent('ic:trans,ift:png') : '';
+  window.open('https://www.google.com/search?tbm=isch&hl=fr&q=' + encodeURIComponent(q) + tbs, '_blank', 'noopener');
+}
+function addGoogleSearch(wrap, getInfo){
+  const box = document.createElement('div'); box.className = 'gsearch';
+  const inp = document.createElement('input'); inp.type = 'text'; inp.spellcheck = false; inp.placeholder = 'Recherche Google Images';
+  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'webbtn'; btn.textContent = '🔎 Google';
+  const go = () => { if (inp.value.trim()) openGoogle(inp.value.trim(), true); };   // toujours PNG a fond transparent
+  // pre-remplit avec "marque nom Farming Simulator 25", sauf si tu as modifie le texte toi-meme
+  wrap._gsync = () => { const auto = googleQuery(getInfo()); if (inp.dataset.auto === undefined || inp.value === inp.dataset.auto){ inp.value = auto; inp.dataset.auto = auto; } };
+  wrap._gsync();
+  btn.addEventListener('click', go);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); go(); } });
+  ['pointerdown', 'click', 'dblclick', 'keydown', 'keyup'].forEach(ev => box.addEventListener(ev, e => e.stopPropagation()));
+  box.append(inp, btn);
+  btnBox(wrap).appendChild(box);
+}
+
+/* --- bouton (mode edition) : image suivante parmi les resultats de la recherche web --- */
+/* --- bouton (mode edition) : retirer l'image perso et revenir a celle du jeu --- */
+/* fenetre "Tu es sur ?" dans la page (les fenetres du navigateur sont bloquees dans OBS) */
+function askConfirm(title, text, okLabel){
+  return new Promise(resolve => {
+    const box = document.createElement('div'); box.className = 'askbox';
+    box.innerHTML = '<div class="askcard"><b class="askt"></b><p class="askp"></p><div class="askbtns"><button type="button" class="askno">Annuler</button><button type="button" class="askok"></button></div></div>';
+    box.querySelector('.askt').textContent = title; box.querySelector('.askp').textContent = text; box.querySelector('.askok').textContent = okLabel || 'Oui';
+    ['pointerdown', 'click', 'dblclick', 'keydown'].forEach(ev => box.addEventListener(ev, e => e.stopPropagation()));
+    const done = v => { box.remove(); document.removeEventListener('keydown', key, true); resolve(v); };
+    const key = e => { if (e.key === 'Escape'){ e.preventDefault(); done(false); } };
+    box.querySelector('.askno').onclick = () => done(false);
+    box.querySelector('.askok').onclick = () => done(true);
+    box.addEventListener('click', e => { if (e.target === box) done(false); });
+    document.addEventListener('keydown', key, true);
+    document.body.appendChild(box); box.querySelector('.askno').focus();
+  });
+}
+function addResetButton(wrap, img, req, getUrl){
+  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'webbtn'; btn.textContent = "↩ Image d'origine";
+  btn.title = "Retire l'image que tu as deposee (elle est gardee dans images_perso\\_retirees)";
+  btn.addEventListener('pointerdown', e => e.stopPropagation());
+  btn.addEventListener('click', async e => {
+    e.stopPropagation(); btn.textContent = '…';
+    try{
+      const r = await fetch('/perso/remove', {method:'POST', body:JSON.stringify(req)});
+      const j = await r.json();
+      if (j.ok){ img.src = getUrl() + '&r=' + Date.now(); note("Image d'origine remise ✓"); }
+      else note(j.reason || 'Rien à retirer.');
+    }catch(err){ note('Serveur injoignable'); }
+    btn.textContent = "↩ Image d'origine";
+  });
+  btnBox(wrap).appendChild(btn);
+}
+const WEB_SEARCH = false;   // recherche web automatique desactivee (moteurs bloques) : bouton "Autre image" masque
+function addWebButton(wrap, img, req, getUrl){
+  if (!WEB_SEARCH) return;
+  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'webbtn'; btn.textContent = '↻ Autre image';
+  btn.addEventListener('pointerdown', e => e.stopPropagation());
+  btn.addEventListener('click', async e => {
+    e.stopPropagation(); btn.textContent = '…';
+    try{
+      const r = await fetch('/web/next', {method:'POST', body:JSON.stringify(req)});
+      const j = await r.json();
+      if (j.ok){
+        wrap.classList.remove('noimg'); img.src = getUrl() + '&r=' + Date.now();
+        note('Image web ' + j.position + '/' + j.total);
+      } else note(j.reason || 'Aucune autre image.');
+    }catch(err){ note('Serveur injoignable'); }
+    btn.textContent = '↻ Autre image';
+  });
+  btnBox(wrap).appendChild(btn);
+}
+/* --- depot d'image (mode edition) : fichier, ou image glissee depuis une page web --- */
+const bgOn = () => { const c = $('optBg'); return !c || c.checked; };
+if ($('optBg')){
+  try{ if (localStorage.getItem('fs25.removeBg') === '0') $('optBg').checked = false; }catch(e){}
+  $('optBg').addEventListener('change', () => { try{ localStorage.setItem('fs25.removeBg', $('optBg').checked ? '1' : '0'); }catch(e){} });
+}
+const bgNote = j => j.bg === 'removed' ? ' — fond retiré (original gardé dans images_perso\\_originaux)'
+                 : j.bg === 'kept' ? ' — fond non uni : image gardée telle quelle'
+                 : j.bg === 'transparent' ? ' — déjà transparente' : '';
+function addDrop(wrap, img, req, getUrl){
+  wrap.addEventListener('dragover', e => { e.preventDefault(); wrap.classList.add('drop'); });
+  wrap.addEventListener('dragleave', () => wrap.classList.remove('drop'));
+  wrap.addEventListener('drop', async e => {
+    e.preventDefault(); e.stopPropagation(); wrap.classList.remove('drop');
+    const dt = e.dataTransfer; let resp;
+    try{
+      if (dt.files && dt.files.length){
+        const f = dt.files[0];
+        if (!f.type.startsWith('image/')){ note("Ce fichier n'est pas une image."); return; }
+        resp = await fetch('/perso?kind=' + req.kind + '&index=' + (req.index || 0) + '&bg=' + (bgOn() ? 1 : 0), {method:'POST', headers:{'Content-Type':f.type}, body:f});
+      } else {
+        const m = /<img[^>]+src=["']([^"']+)["']/i.exec(dt.getData('text/html') || '');
+        const url = ((m && m[1]) || dt.getData('text/uri-list') || dt.getData('text/plain') || '').split('\n')[0].trim();
+        if (!/^https?:\/\//.test(url)){ note('Dépose un fichier image, ou une image glissée depuis un site.'); return; }
+        resp = await fetch('/perso', {method:'POST', headers:{'Content-Type':'application/json'},
+                                       body:JSON.stringify({kind:req.kind, index:req.index || 0, url, bg:bgOn()})});
+      }
+      const j = await resp.json();
+      if (j.ok){ wrap.classList.remove('noimg'); img.src = getUrl() + '&r=' + Date.now(); note('Image enregistrée ✓' + bgNote(j)); }
+      else note(j.reason || 'Échec');
+    }catch(err){ note('Serveur injoignable'); }
+  });
+}
+if (EDIT){
+  addWebButton($('vehWrap'), $('vehImg'), {kind:'vehicle'}, () => $('vehImg').dataset.key);
+  addDrop($('vehWrap'), $('vehImg'), {kind:'vehicle'}, () => $('vehImg').dataset.key);
+  addCaptureButton($('vehWrap'), $('vehImg'), {kind:'vehicle', label:'véhicule'}, () => $('vehImg').dataset.key);
+  addGoogleSearch($('vehWrap'), () => curVehicleInfo);
+  addResetButton($('vehWrap'), $('vehImg'), {kind:'vehicle'}, () => $('vehImg').dataset.key);
+}
+
+/* --- icones de voyants : moteur, feux, gyrophare, outils, alertes (mises a jour sans reconstruire) --- */
+const T = '<rect class="tile" x="0.5" y="0.5" width="39" height="39" rx="11"/>';
+const ICO = {
+  engine: '<circle class="disc" cx="20" cy="20" r="19"/><path class="pw" d="M13.6 12.1A10.6 10.6 0 1 0 26.4 12.1"/><path class="pw" d="M20 8.5V19.5"/>',
+  lights: T + '<path class="s lamp" d="M17 11H13.5C8.5 11 6.5 14.5 6.5 20S8.5 29 13.5 29H17Z"/><path class="s" d="M21.5 14L33 17.5M21.5 20H33.5M21.5 26L33 22.5"/>',
+  beacon: T + '<rect class="f" x="9" y="32" width="22" height="4" rx="1.5"/><path class="s dome" d="M12 32V28a8 8 0 0 1 16 0V32Z"/>'
+    + '<g class="fx"><g class="ga" clip-path="url(#icoClipL)"><path class="half" d="M12 32V28a8 8 0 0 1 16 0V32Z"/></g><g class="gb" clip-path="url(#icoClipR)"><path class="half" d="M12 32V28a8 8 0 0 1 16 0V32Z"/></g></g>'
+    + '<g class="ga"><path class="s" d="M8 28L3 28"/><path class="s" d="M9.6 22L5.3 19.5"/><path class="s" d="M14 17.6L11.5 13.3"/></g>'
+    + '<g class="gb"><path class="s" d="M32 28L37 28"/><path class="s" d="M30.4 22L34.7 19.5"/><path class="s" d="M26 17.6L28.5 13.3"/></g>',
+  brake: T + '<circle class="s" cx="20" cy="20" r="13.5"/><text x="20" y="26" text-anchor="middle" class="ltr">P</text>',
+  cruise: T + '<path class="s" d="M5 28A15 15 0 0 1 35 28"/><path class="s" d="M20 28L28 16"/><circle class="f" cx="20" cy="28" r="2.6"/>',
+  fuel: T + '<g transform="translate(5.5,5.5) scale(1.25)"><path class="s2" d="M14 11h1a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0v-7l-3 -3"/><path class="s2" d="M4 20v-14a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v14"/><path class="s2" d="M3 20h12"/><path class="s2" d="M18 7v1a1 1 0 0 0 1 1h1"/><path class="s2" d="M4 11h10"/></g>',
+  wrench: T + '<g transform="translate(5.5,5.5) scale(1.25)"><path class="s2" d="M7 10h3v-3l-3.5 -3.5a6 6 0 0 1 8 8l6 6a2 2 0 0 1 -3 3l-6 -6a6 6 0 0 1 -8 -8l3.5 3.5"/></g>',
+  lowered: T + '<g class="down"><path class="s" d="M20 9V24M13.5 18.5L20 25l6.5-6.5"/><path class="s" d="M10 31H30"/></g><g class="up"><path class="s" d="M20 27V12M13.5 17.5L20 11l6.5 6.5"/><path class="s" d="M10 33H30"/></g>',
+  turned: T + '<g class="spin"><path class="s" d="M28.5 14.5A10 10 0 1 0 30 21"/><path class="s" d="M29 8.5v7h-7"/></g>',
+  unfolded: T + '<g class="open"><path class="s" d="M8 20H32M13 14L8 20l5 6M27 14l5 6-5 6"/></g><g class="shut"><path class="s" d="M8 20H17M32 20H23M12 14l5 6-5 6M28 14l-5 6 5 6"/></g>',
+};
+const alertsAlways = () => !!(layout.alertsalways && layout.alertsalways.visible === true);
+const pushIcon = (arr, id, on, part, title, blink, kind) => arr.push({id, kind:kind || id, on, part, title, blink:!!blink});
+
+function toolIcons(st){
+  const out = [];
+  if (st.lowered !== undefined) pushIcon(out, 'lowered', !!st.lowered, 'toolbadges', st.lowered ? 'Outil abaissé' : 'Outil relevé');
+  if (st.turnedOn !== undefined) pushIcon(out, 'turned', !!st.turnedOn, 'toolbadges', st.turnedOn ? 'Outil en marche' : 'Outil à l\'arrêt', false, 'turned');
+  if (st.unfolded !== undefined) pushIcon(out, 'unfolded', !!st.unfolded, 'toolbadges', st.unfolded ? 'Outil déplié' : 'Outil replié');
+  return out;
+}
+function vehicleIcons(info, d){
+  const st = (info && info.status) || {}, main = [], alerts = [], always = alertsAlways();
+  if (st.engine !== undefined) pushIcon(main, 'engine', !!st.engine, 'badges', st.engine ? 'Moteur allumé' : 'Moteur éteint');
+  if (st.lights !== undefined){
+    // Allume seulement si croisement ou route. L'indicateur general (masque non nul) ne sert que de secours
+    // quand le jeu ne donne pas le detail : il peut rester vrai meme feux eteints.
+    const known = st.lightLow !== undefined || st.lightHigh !== undefined;
+    const lightsOn = known ? (st.lightLow === true || st.lightHigh === true) : !!st.lights;
+    pushIcon(main, 'lights', lightsOn, 'badges', lightsOn ? (st.lightHigh ? 'Pleins phares' : 'Feux allumés') : 'Feux éteints');
+  }
+  if (st.beacon !== undefined) pushIcon(main, 'beacon', !!st.beacon, 'badges', st.beacon ? 'Gyrophare allumé' : 'Gyrophare éteint');
+  if (st.parkingBrake !== undefined) pushIcon(main, 'brake', !!st.parkingBrake, 'badges', st.parkingBrake ? 'Frein à main serré' : 'Frein à main desserré');
+  if (st.cruise !== undefined) pushIcon(main, 'cruise', !!st.cruise, 'badges', st.cruise ? 'Régulateur ' + (st.cruiseSpeed ? Math.round(st.cruiseSpeed) + ' km/h' : 'actif') : 'Régulateur éteint');
+  main.push(...toolIcons(st));                       // vehicule auto-porte (moissonneuse, pulverisateur...)
+  if (d && typeof d.fuelLevel === 'number' && d.fuelCapacity > 0){
+    const low = d.fuelLevel / d.fuelCapacity < 0.10;
+    if (low || always) pushIcon(alerts, 'fuel', low, 'alerts', low ? 'Carburant bas' : 'Carburant', true);
+  }
+  if (d && typeof d.condition === 'number'){
+    const bad = d.condition < 40;
+    if (bad || always) pushIcon(alerts, 'wrench', bad, 'alerts', 'État ' + Math.round(d.condition) + ' %');
+  }
+  return {main, alerts};
+}
+function implementIcons(info){ return toolIcons((info && info.status) || {}); }
+function syncIcons(container, items){
+  if (!container) return 0;
+  const key = items.map(i => i.id + ':' + i.kind).join('|');
+  if (container.dataset.key !== key){
+    container.dataset.key = key; container.replaceChildren();
+    items.forEach(i => {
+      const el = document.createElement('span'); el.dataset.id = i.id; el.dataset.k = i.kind; el.dataset.part = i.part;
+      el.innerHTML = '<svg viewBox="0 0 40 40" aria-hidden="true">' + ICO[i.kind] + '</svg>';   // gabarits internes, aucune donnee externe
+      container.appendChild(el);
+    });
+  }
+  items.forEach(i => {
+    const el = container.querySelector('[data-id="' + i.id + '"]'); if (!el) return;
+    const cls = 'ico' + (i.on ? ' on' : '') + (i.on && i.blink ? ' blink' : '') + (partVisible(i.part) ? '' : ' partoff');
+    if (el.className !== cls) el.className = cls;
+    if (el.title !== i.title){ el.title = i.title; el.setAttribute('aria-label', i.title); }
+  });
+  return items.length;
+}
+
+let lastVehFillKey = '', vehFillRefs = [];
+function renderVehicleFills(fills){
+  const key = JSON.stringify(fillKey(fills));
+  if (key !== lastVehFillKey){ lastVehFillKey = key; vehFillRefs = buildFills($('vehFills'), fills || [], 'vehicle'); }
+  updateFills(vehFillRefs, fills);
+}
+
+let lastImplKey = '', implRefs = [], implBadgeEls = [];
+function renderImplements(list){
+  const key = JSON.stringify(list.map(i => [i.name, i.image, i.imgv || 0, fillKey(i.fills)]));
+  if (key !== lastImplKey){
+    lastImplKey = key; implRefs = []; implBadgeEls = [];
+    const box = $('impls');
+    box.replaceChildren();
+    box.classList.toggle('multi', list.length > 1);
+    box.classList.toggle('single', list.length === 1);
+    if (!list.length){
+      const n = document.createElement('div'); n.className = 'none'; n.textContent = 'Aucun outil détecté';
+      box.appendChild(n); return;
+    }
+    list.forEach((info, i) => {
+      const {brand, name} = fullName(info);
+      const item = document.createElement('div'); item.className = 'impl';
+      const wrap = document.createElement('div'); wrap.className = 'imgwrap noimg';
+      const img = document.createElement('img'); img.alt = '';
+      const ph = document.createElement('span'); ph.className = 'ph'; ph.textContent = '🚜';
+      wrap.append(img, ph);
+      const meta = document.createElement('div'); meta.className = 'meta';
+      const b = document.createElement('div'); b.className = 'brandline'; b.textContent = brand;
+      const t = document.createElement('div'); t.className = 'title'; t.textContent = name;
+      const fl = document.createElement('div'); fl.className = 'fills'; fl.dataset.part = 'contents';
+      if (!partVisible('contents')) fl.classList.add('partoff');
+      implRefs.push(buildFills(fl, info.fills || [], String(i)));
+      const bd = document.createElement('div'); bd.className = 'icons none'; const ig = document.createElement('div'); ig.className = 'ig'; bd.appendChild(ig); implBadgeEls.push(bd);
+      meta.append(b, t, bd, fl);
+      item.append(wrap, meta);
+      box.appendChild(item);
+      setImage(wrap, img, '/img/implement/' + i + '?k=' + encodeURIComponent(info.image || info.name) + '&v=' + (info.imgv || 0));
+      rescale(BLOCKS.find(x => x.id === 'implements'));
+      if (EDIT){
+        addWebButton(wrap, img, {kind:'implement', index:i}, () => img.dataset.key);
+        addDrop(wrap, img, {kind:'implement', index:i}, () => img.dataset.key);
+        addCaptureButton(wrap, img, {kind:'implement', index:i, label:info.name}, () => img.dataset.key);
+        addGoogleSearch(wrap, () => info);
+        addResetButton(wrap, img, {kind:'implement', index:i}, () => img.dataset.key);
+      }
+    });
+  }
+  list.forEach((info, i) => { updateFills(implRefs[i], info.fills); const bd = implBadgeEls[i]; if (bd) bd.classList.toggle('none', syncIcons(bd.firstChild, implementIcons(info)) === 0); });
+  fitImplements();
+}
+
+/* --- decor "a pied" : ciel, soleil / lune, ferme, selon l'heure du jeu --- */
+const SKY = [[0,'#0a1020'],[4,'#0e1730'],[5.5,'#3a3d6b'],[6.5,'#e59a5a'],[8,'#7fb4e0'],[12,'#6fb0e8'],[17,'#86b4dc'],[18.5,'#e88a50'],[19.5,'#4a3b66'],[21,'#141a33'],[24,'#0a1020']];
+const LIGHT = [[0,0],[5,0.05],[6.5,0.6],[8,1],[17,1],[18.5,0.6],[20,0.1],[21,0],[24,0]];
+const rgb = c => [1,3,5].map(i => parseInt(c.substr(i,2),16));
+const mixHex = (a, b, t) => { const x = rgb(a), y = rgb(b);
+  return '#' + x.map((v,i) => { const n = Math.round(v + (y[i]-v)*t); return (n < 16 ? '0' : '') + n.toString(16); }).join(''); };
+function seg(tb, h){ for (let i = 0; i < tb.length-1; i++){ const a = tb[i], b = tb[i+1];
+  if (h >= a[0] && h <= b[0]) return [a, b, (h-a[0])/(b[0]-a[0])]; } const l = tb[tb.length-1]; return [l, l, 0]; }
+(function makeStars(){
+  const g = document.getElementById('sc-stars'); let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 90; i++){
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('cx', (-700 + rnd()*2080).toFixed(0)); c.setAttribute('cy', (-700 + rnd()*850).toFixed(0));
+    c.setAttribute('r', (1 + rnd()*1.2).toFixed(1)); g.appendChild(c);
+  }
+})();
+let lastSceneMin = -1;
+function renderScene(min){
+  if (min === lastSceneMin) return; lastSceneMin = min;
+  const h = min / 60, s = seg(SKY, h), sky = mixHex(s[0][1], s[1][1], s[2]);
+  const l = seg(LIGHT, h), b = l[0][1] + (l[1][1] - l[0][1]) * l[2];
+  const set = (id, k, v) => document.getElementById(id).setAttribute(k, v);
+  set('sc-sky', 'fill', sky);
+  set('sc-stars', 'opacity', Math.max(0, Math.min(1, (0.45 - b) / 0.45)).toFixed(2));
+  const day = h >= 6 && h < 18;
+  const t = day ? (h - 6) / 12 : ((h < 6 ? h + 24 : h) - 18) / 12;
+  const x = (80 + 520 * t).toFixed(1), y = (205 - 150 * Math.sin(Math.PI * t)).toFixed(1);
+  set('sc-sun', 'cx', x); set('sc-sun', 'cy', y); set('sc-sun', 'opacity', day ? 1 : 0);
+  set('sc-sun', 'fill', (t < 0.12 || t > 0.88) ? '#f08a3c' : '#f5c04a');
+  set('sc-moon', 'cx', x); set('sc-moon', 'cy', y); set('sc-moon', 'opacity', day ? 0 : 1);
+  set('sc-cut', 'cx', (+x + 7).toFixed(1)); set('sc-cut', 'cy', (+y - 4).toFixed(1));
+  set('sc-cut', 'fill', sky); set('sc-cut', 'opacity', day ? 0 : 1);
+  const far = mixHex('#16281f', '#3f7a45', b), near = mixHex('#101c15', '#2f5f36', b);
+  set('sc-far', 'fill', far); set('sc-far', 'stroke', far);
+  set('sc-near', 'fill', near); set('sc-near', 'stroke', near);
+  set('sc-rows', 'stroke', mixHex('#1a2d20', '#3f7a45', b));
+  set('sc-farm', 'fill', mixHex('#070b09', '#244a2c', b));
+  set('sc-lights', 'opacity', Math.max(0, Math.min(1, (0.5 - b) / 0.3)).toFixed(2));
+}
+function setOnFoot(on){
+  $('vehWrap').classList.toggle('foot', on);
+  els.vehicle.classList.toggle('onfoot', on);
+}
+
+function resetChips(){
+  ['map', 'clock', 'weather', 'money', 'hours'].forEach(id => { $(id).textContent = '—'; });
+  $('dayLabel').textContent = 'Jour';
+}
+async function refresh(){
+  const box = $('statusBox');
+  try{
+    const r = await fetch('/data.json?t=' + Date.now(), {cache:'no-store'});
+    if (!r.ok) throw new Error();
+    let d = await r.json();
+    const idle = d.session === false;                    // menu principal / jeu ferme : on oublie les infos de la derniere partie
+    document.body.classList.toggle('nosession', idle);
+    if (idle){
+      d = {active:false, vehicle:'', speedKmh:0, implements:[], game:{}};
+      resetChips();
+    }
+    const g = d.game || {};
+    curVehicleInfo = d.vehicleInfo || null;
+    if ($('vehWrap')._gsync) $('vehWrap')._gsync();
+
+    if ((d.active || d.handTool) && d.vehicleInfo){                // vehicule conduit, ou outil a main tenu a pied
+      const {brand, name} = fullName(d.vehicleInfo, d.vehicle);
+      $('vehName').textContent = name; $('vehBrand').textContent = brand || (d.handTool ? 'Outil à main' : '');
+      if (name !== lastVehName){ lastVehName = name; requestAnimationFrame(() => rescale(BLOCKS.find(b => b.id === 'vehicle'))); }
+      setImage($('vehWrap'), $('vehImg'), '/img/vehicle?k=' + encodeURIComponent(d.vehicleInfo.image || d.vehicleInfo.name) + '&v=' + (d.vehicleInfo.imgv || 0));
+      renderVehicleFills(d.vehicleInfo.fills || []);
+      const ic = vehicleIcons(d.vehicleInfo, d);
+      $('vehIcons').classList.toggle('none', syncIcons($('vehIconsMain'), ic.main) + syncIcons($('vehIconsAlerts'), ic.alerts) === 0);
+      setOnFoot(false);
+    } else {
+      const known = typeof g.hour === 'number';
+      const minutes = known ? g.hour * 60 + (g.minute || 0) : 720;
+      renderScene(minutes);
+      $('vehName').textContent = known ? 'À pied' : 'En attente du jeu…';
+      $('vehBrand').textContent = known ? (g.day != null ? 'Jour ' + g.day + ' · ' : '') + String(g.hour).padStart(2,'0') + ':' + String(g.minute || 0).padStart(2,'0') : '';
+      renderVehicleFills([]);
+      setOnFoot(true);
+    }
+    $('speed').textContent = Number(d.speedKmh || 0).toFixed(1);
+    renderImplements(d.implements || []);
+
+    const hasFuel = typeof d.fuelLevel === 'number' && d.fuelCapacity > 0;
+    if (hasFuel){
+      const pct = d.fuelLevel / d.fuelCapacity * 100;
+      $('fuelPct').textContent = Math.round(pct) + ' %'; setBar($('fuelBar'), pct);
+      $('fuelTxt').textContent = fmtInt(d.fuelLevel) + ' L / ' + fmtInt(d.fuelCapacity) + ' L';
+    } else { $('fuelPct').textContent = '—'; setBar($('fuelBar'), 0); $('fuelTxt').innerHTML = '&nbsp;'; }
+    if (typeof d.condition === 'number'){
+      $('condPct').textContent = Math.round(d.condition) + ' %'; setBar($('condBar'), d.condition);
+    } else { $('condPct').textContent = '—'; setBar($('condBar'), 0); }
+
+    if (g.map) $('map').textContent = String(g.map).replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+    if (typeof g.hour === 'number'){
+      $('clock').textContent = String(g.hour).padStart(2,'0') + ':' + String(g.minute || 0).padStart(2,'0');
+      const mo = (typeof g.period === 'number' && g.period >= 1 && g.period <= 12) ? MONTHS[Math.round(g.period) - 1] : '';
+      $('dayLabel').textContent = (g.day != null ? 'Jour ' + g.day : 'Jour') + (mo ? ' · ' + mo : '');
+    }
+    const tsEl = $('timeScale');
+    if (typeof g.timeScale === 'number'){ tsEl.textContent = g.timeScale === 0 ? '⏸' : '×' + (Number.isInteger(g.timeScale) ? g.timeScale : g.timeScale.toFixed(1)); tsEl.style.display = ''; }
+    else tsEl.style.display = 'none';
+    renderForecast(g.forecast);
+    renderField(d.field);
+    window._lastData = d; renderRadar(d);
+    if (typeof g.temperature === 'number' || g.weather){
+      const w = g.weather ? (WEATHER[String(g.weather).toUpperCase()] || g.weather) : '';
+      $('weather').textContent = (typeof g.temperature === 'number' ? Math.round(g.temperature) + '°C ' : '') + w;
+    }
+    if (typeof g.money === 'number') $('money').textContent = fmtInt(g.money) + ' €';
+    if (typeof g.playHours === 'number') $('hours').textContent = g.playHours.toFixed(1).replace('.', ',') + ' h';
+
+    $('status').textContent = idle ? 'Hors partie (menu principal)' : 'Connecté au jeu'; $('dot').style.background = idle ? '#e7ae51' : '#8fe45f';
+    if (!EDIT) box.classList.remove('show');
+  }catch(e){
+    $('status').textContent = 'En attente du jeu / serveur local'; $('dot').style.background = '#e7ae51';
+    box.classList.add('show');
+  }
+}
+
+applyAll();
+updateProfileInfo();
+loadLayout();
+if (!EDIT) setInterval(loadLayout, 2000);   // OBS reprend les changements de disposition tout seul
+refresh(); setInterval(refresh, 500);
+</script>
+</body>
+</html>

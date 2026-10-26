@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mode compagnon - connexion</title>
+<link rel="icon" href="/compagnon/icon.svg">
+<style>
+:root{color-scheme:dark;--bg:#0c1210;--card:#16211b;--card2:#1c2a22;--line:#2c3d33;--green:#8fe45f;--onGreen:#0d1410;--text:#f3f7f2;--muted:#a3b3a8;--amber:#e7ae51;--red:#ef6a5a}
+:root.light{color-scheme:light;--bg:#eef2ea;--card:#fff;--card2:#f4f7f1;--line:#d6e0d1;--green:#3d8f1c;--onGreen:#fff;--text:#18241c;--muted:#5f6f64;--amber:#b7700c;--red:#c8392b}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font:15px "Segoe UI",Arial,sans-serif;color:var(--text);background:var(--bg);display:flex;justify-content:center;padding:28px 16px}
+:root:not(.light) body{background:radial-gradient(ellipse at 20% 0%,#1d3026 0%,var(--bg) 70%) fixed}
+.wrap{width:min(560px,100%);display:flex;flex-direction:column;gap:14px}
+.head{display:flex;align-items:center;gap:10px}
+.logo{font-weight:900;color:#fff;background:#4f9d2a;border-radius:8px;padding:2px 10px;transform:skewX(-8deg);font-size:18px}
+h1{margin:0;font-size:22px;font-weight:800}h1 b{color:var(--green)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.label{font-size:11px;letter-spacing:.13em;color:var(--muted);font-weight:700;text-transform:uppercase}
+.row{display:flex;align-items:center;gap:12px}
+.sp{flex:1}
+.muted{color:var(--muted);font-size:13px;line-height:1.5}
+.sw{width:52px;height:30px;border-radius:15px;background:var(--line);position:relative;cursor:pointer;border:0;flex-shrink:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .15s}
+.sw.on{background:var(--green)}.sw.on::after{left:25px}
+.qrbox{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.qr{background:#fff;border-radius:14px;padding:6px;line-height:0}
+.qr svg{width:230px;height:230px}
+.url{font:700 17px "Segoe UI",Arial;padding:8px 14px;border-radius:999px;background:var(--card2);border:1px solid var(--line);word-break:break-all;user-select:all}
+.btn{padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--text);font:700 13px "Segoe UI",Arial;cursor:pointer}
+.btn.pri{background:var(--green);border-color:var(--green);color:var(--onGreen)}
+.btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+input[type=text]{width:120px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--text);font:700 18px "Segoe UI",Arial;letter-spacing:.2em;text-align:center}
+.warn{color:var(--amber)}.bad{color:var(--red)}.ok{color:var(--green)}
+.off .qrbox{opacity:.35;filter:grayscale(1)}
+details summary{cursor:pointer;font-weight:700}
+details p{margin:8px 0 0}
+#msg{min-height:18px}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head"><svg viewBox="44 48 422 330" style="width:52px;height:41px;color:var(--text);flex-shrink:0"><g fill="none" stroke="currentColor" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"><rect x="58" y="62" width="300" height="210" rx="22"/><line x1="208" y1="272" x2="208" y2="306"/><line x1="160" y1="318" x2="256" y2="318"/></g><g transform="translate(176 192) scale(.95)"><g fill="currentColor"><path d="M-70 4 V-26 a6 6 0 0 1 6-6 H-34 V-66 a6 6 0 0 1 6-6 H10 a6 6 0 0 1 5.7 4.2 L26 -32 H48 a8 8 0 0 1 7.6 5.5 L64 -2 V12 H-70Z"/><rect x="-10" y="-86" width="7" height="16" rx="3"/><path d="M-24 -62 H4 L12 -36 H-24Z" fill="#0b120e"/></g><circle cx="-32" cy="16" r="34" fill="#0b120e" stroke="currentColor" stroke-width="12"/><circle cx="-32" cy="16" r="9" fill="currentColor"/><circle cx="46" cy="26" r="22" fill="#0b120e" stroke="currentColor" stroke-width="10"/><circle cx="46" cy="26" r="6" fill="currentColor"/></g><g transform="translate(330 150)"><rect x="0" y="0" width="122" height="214" rx="22" fill="#0b120e" stroke="currentColor" stroke-width="13"/><rect x="20" y="28" width="82" height="58" rx="6" fill="#9bd636" opacity=".9"/><rect x="20" y="96" width="38" height="40" rx="6" fill="#e8962a"/><rect x="64" y="96" width="38" height="40" rx="6" fill="#5fae4a"/><path d="M48 160 l14 -26 l14 26 l-14 -8z" fill="currentColor"/><rect x="44" y="190" width="34" height="6" rx="3" fill="currentColor"/></g></svg><h1>Mode <b>compagnon</b></h1><span class="sp"></span><button class="btn" id="theme" title="Thème clair / sombre">◐</button></div>
+
+  <div class="card row">
+    <div style="flex:1"><div style="font-weight:800;font-size:16px">Ouvert au Wi-Fi de la maison</div>
+      <div class="muted" id="lanTxt">Permet d'ouvrir la page compagnon sur un téléphone ou une tablette.</div></div>
+    <button class="sw" id="lan" aria-label="Ouvrir au Wi-Fi"></button>
+  </div>
+
+  <div class="card qrbox" id="qrCard">
+    <div class="muted">Scanne ce code avec l'appareil photo du téléphone ou de la tablette<br>(connecté au même Wi-Fi que ce PC)</div>
+    <div class="qr" id="qr"></div>
+    <div class="url" id="url">—</div>
+    <div class="btns"><button class="btn" id="copy">Copier l'adresse</button><a class="btn" href="/compagnon" target="_blank" style="text-decoration:none">Ouvrir sur ce PC</a></div>
+    <div class="muted" id="others"></div>
+  </div>
+
+  <div class="card">
+    <div class="row"><div style="flex:1"><div style="font-weight:800">Code d'accès</div>
+      <div class="muted">Facultatif. Demandé une seule fois sur chaque appareil.</div></div>
+      <input type="text" id="code" inputmode="numeric" maxlength="8" placeholder="aucun"><button class="btn" id="saveCode">OK</button></div>
+  </div>
+
+  <div class="card">
+    <details><summary>Le téléphone n'arrive pas à ouvrir la page ?</summary>
+      <p class="muted">1. Vérifie que le téléphone est sur le <b>même Wi-Fi</b> que ce PC (pas en 4G/5G).<br>
+      2. La première fois, Windows demande d'autoriser l'application dans le <b>pare-feu</b> : clique « Autoriser ». Si tu as fermé la fenêtre trop vite, clique ci-dessous (Windows demandera ton accord).<br>
+      3. Le Wi-Fi « invité » de certaines box isole les appareils : utilise le Wi-Fi principal.</p>
+      <p><button class="btn" id="fw">Autoriser dans le pare-feu Windows</button></p></details>
+  </div>
+  <div class="muted" id="msg"></div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+try { if (localStorage.getItem('cp_theme') === 'light') document.documentElement.classList.add('light'); } catch (e) {}
+$('theme').onclick = () => { const l = document.documentElement.classList.toggle('light'); try { localStorage.setItem('cp_theme', l ? 'light' : 'dark'); } catch (e) {} };
+let info = null;
+function show(i){
+  info = i;
+  $('lan').classList.toggle('on', !!i.lan);
+  $('wrap').classList.toggle('off', !i.running);
+  $('lanTxt').innerHTML = i.running ? '<span class="ok">● Actif</span> sur le port ' + i.port
+    : (i.lan && i.error ? '<span class="bad">Problème : ' + i.error + '</span>' : 'Désactivé : la page compagnon ne marche que sur ce PC.');
+  $('qr').innerHTML = i.qr || '<div style="padding:40px;color:#333;font:14px Segoe UI">Aucune adresse réseau trouvée.<br>Ce PC est-il connecté ?</div>';
+  $('url').textContent = i.urls[0] || 'Pas de réseau détecté';
+  $('others').textContent = i.urls.length > 1 ? 'Autres adresses possibles : ' + i.urls.slice(1).join('  ·  ') : '';
+  if (document.activeElement !== $('code')) $('code').value = i.code || '';
+  $('fw').style.display = i.windows ? '' : 'none';
+}
+const load = () => fetch('/compagnon/info', {cache:'no-store'}).then(r => r.json()).then(show).catch(() => { $('msg').textContent = "L'application ne répond pas."; });
+function save(obj){
+  return fetch('/compagnon/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(obj)})
+    .then(r => r.json()).then(j => { if (j.error){ $('msg').innerHTML = '<span class="bad">' + j.error + '</span>'; return; } $('msg').textContent = ''; show(j); });
+}
+$('lan').onclick = () => save({lan: !(info && info.lan)}).then(() => {
+  if (info && info.running) $('msg').textContent = "Si Windows affiche une fenêtre « pare-feu », clique « Autoriser ».";
+});
+$('saveCode').onclick = () => save({code: $('code').value.trim()}).then(() => { if (info) $('msg').textContent = info.code ? 'Code enregistré.' : 'Code supprimé : accès libre sur le Wi-Fi.'; });
+$('code').onkeydown = e => { if (e.key === 'Enter') $('saveCode').click(); };
+$('copy').onclick = () => { if (info && info.urls[0]) navigator.clipboard.writeText(info.urls[0]).then(() => { $('msg').textContent = 'Adresse copiée.'; }); };
+$('fw').onclick = () => fetch('/compagnon/firewall', {method:'POST'}).then(r => r.json()).then(j => { $('msg').textContent = j.message; });
+load(); setInterval(load, 5000);
+</script>
+</body>
+</html>

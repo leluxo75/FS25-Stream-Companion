@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Configuration SignPath "installateur" (slug = installateur) : signe l'installateur Inno Setup. -->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <zip-file>
+    <pe-file path="FS25 Stream &amp; Companion - Installation v*.exe" product-name="FS25 Stream &amp; Companion">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

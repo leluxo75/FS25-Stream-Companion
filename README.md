@@ -27,3 +27,33 @@ La dernière version est dans **[Releases](../../releases/latest)** : téléchar
 
 - Discord « La Ferme à Luxo » : https://discord.gg/xhsWj2e5z3
 - Soutenir le projet : https://ko-fi.com/leluxo
+
+
+## License
+
+FS25 Stream & Companion is free and open source software, released under the [MIT License](LICENSE).
+Original idea, design and author: **leluxo (LeLuxo)**.
+
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+
+- Committers and reviewers: [leluxo75](https://github.com/leluxo75)
+- Approvers: [leluxo75](https://github.com/leluxo75)
+
+Every release is built from this repository by GitHub Actions (`.github/workflows/fabrication.yml`).
+Each signing request is manually approved by the approver above.
+
+## Privacy policy
+
+The program only contacts the following systems:
+
+- **Update check (automatic):** asks GitHub (api.github.com) for the latest release number of this repository, and downloads the installer from GitHub if you accept an update. No personal data is sent.
+- **Automatic vehicle image search (can be turned off in the settings):** sends the vehicle / implement name to an image search engine (DuckDuckGo, Bing, or Google if you enter your own API key), then downloads the chosen picture from the site that hosts it.
+- **Companion mode:** the app serves a web page on your local network so your phone can connect; nothing goes through an external server.
+
+No account, no analytics, no tracking. All settings stay on your PC.
+
+## Uninstall
+
+Windows Settings > Apps > "FS25 Stream & Companion by leluxo" > Uninstall. The uninstaller also removes the mod and the app data.
