@@ -1,0 +1,135 @@
+# Fabrique (et signe, une fois SignPath accepte) FS25 Stream & Companion sur les serveurs de GitHub.
+# Se lance : a chaque tag "v1.2.3" pousse, ou a la main (onglet Actions > Fabrication > Run workflow).
+# Signature : active toute seule des que la variable de depot SIGNPATH_ORG_ID existe
+#             (Settings > Secrets and variables > Actions), avec le secret SIGNPATH_API_TOKEN.
+
+name: Fabrication
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write   # pour creer la release
+  actions: read     # pour que SignPath recupere les fichiers a signer
+
+jobs:
+  fabrication:
+    runs-on: windows-latest
+    env:
+      SIGNER: ${{ vars.SIGNPATH_ORG_ID != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.15'
+          allow-prereleases: true
+
+      - name: Outils
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyinstaller pillow pystray
+
+      - name: Version
+        id: version
+        shell: bash
+        run: echo "ver=$(python outils/version_info.py)" >> "$GITHUB_OUTPUT"
+
+      - name: Fabrication de l'application (dossier exe + _internal)
+        run: >
+          python -m PyInstaller --noconfirm --clean --log-level WARN --onedir --windowed --noupx
+          --name "FS25 Stream Dashboard" --icon app.ico --version-file version_info.txt
+          --add-data "web;web" --add-data "mod;mod" --add-data "app.ico;."
+          --hidden-import server --hidden-import accueil --hidden-import PIL._tkinter_finder --hidden-import pystray._win32
+          app.py
+
+      # ---------- signature de l'application (SignPath) ----------
+      - name: Envoi de l'application a signer
+        if: env.SIGNER == 'true'
+        id: app-non-signee
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-non-signee
+          path: dist/
+
+      - name: Signature de l'application
+        if: env.SIGNER == 'true'
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORG_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: application
+          github-artifact-id: ${{ steps.app-non-signee.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600   # le temps que tu approuves sur signpath.io
+          output-artifact-directory: dist-signe
+
+      - name: Remplacement par la version signee
+        if: env.SIGNER == 'true'
+        shell: pwsh
+        run: |
+          Remove-Item dist -Recurse -Force
+          Rename-Item dist-signe dist
+          Get-AuthenticodeSignature "dist\FS25 Stream Dashboard\FS25 Stream Dashboard.exe" | Format-List Status, SignerCertificate
+
+      # ---------- installateur (Inno Setup) ----------
+      - name: Fabrication de l'installateur
+        shell: pwsh
+        run: |
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) { choco install innosetup -y --no-progress }
+          $iscc = (Get-ChildItem "C:\Program Files*\Inno Setup*\ISCC.exe" | Select-Object -First 1).FullName
+          & $iscc /Q "/DAppVersion=${{ steps.version.outputs.ver }}" installateur.iss
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          New-Item -ItemType Directory installateur | Out-Null
+          Move-Item "FS25 Stream & Companion - Installation v*.exe" installateur\
+
+      - name: Envoi de l'installateur a signer
+        if: env.SIGNER == 'true'
+        id: installateur-non-signe
+        uses: actions/upload-artifact@v4
+        with:
+          name: installateur-non-signe
+          path: installateur/
+
+      - name: Signature de l'installateur
+        if: env.SIGNER == 'true'
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORG_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: installateur
+          github-artifact-id: ${{ steps.installateur-non-signe.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: installateur-signe
+
+      - name: Remplacement par l'installateur signe
+        if: env.SIGNER == 'true'
+        shell: pwsh
+        run: |
+          Remove-Item installateur -Recurse -Force
+          Rename-Item installateur-signe installateur
+
+      # ---------- resultats ----------
+      - name: Portable (zip)
+        shell: pwsh
+        run: Compress-Archive -Path "dist\FS25 Stream Dashboard" -DestinationPath "installateur\FS25 Stream & Companion - Portable v${{ steps.version.outputs.ver }}.zip"
+
+      - name: Fichiers fabriques (telechargeables depuis l'onglet Actions)
+        uses: actions/upload-artifact@v4
+        with:
+          name: FS25-Stream-Companion-v${{ steps.version.outputs.ver }}
+          path: installateur/
+
+      - name: Brouillon de release (seulement pour un tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: installateur/*
