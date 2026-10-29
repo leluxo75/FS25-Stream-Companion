@@ -4,6 +4,8 @@
 
 Overlay de stream **et** compagnon de jeu pour **Farming Simulator 25**.
 
+> ⚠️ **Mod non officiel** pour Farming Simulator 25, gratuit, non affilié à GIANTS Software. Farming Simulator est une marque de GIANTS Software. — *Unofficial, free mod for Farming Simulator 25, not affiliated with GIANTS Software.*
+
 - 🎥 **Stream (OBS)** : ton véhicule, tes outils, le champ, la météo, l'argent… dans une page à ajouter dans OBS.
 - 📱 **Compagnon** : sur téléphone, tablette ou 2e écran : carte des champs, fiches des champs, engins, bâtiments, animaux et silos, liste « À faire », alertes, qui fait quoi, téléportation en double-clic (aussi vers un joueur), écran toujours allumé.
 - 🎮 **Dans le jeu** : blocs d'infos (À faire, Qui fait quoi, Prévisions météo, Champ actuel, Dernières alertes), touche **F9** pour les ouvrir / fermer (modifiable dans Options > Commandes du jeu). Alertes : champ prêt, production à l'arrêt, stock plein, animaux, meilleur mois pour vendre.
